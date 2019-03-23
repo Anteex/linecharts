@@ -2,7 +2,7 @@ import loadJSON from './loadjson.js';
 import Chart from './chart.js';
 import toggleDisplayMode from './displaymode.js';
 
-loadJSON("chart_data.json")
+loadJSON("linecharts/chart_data.json")
     .then((result) => {
         const chart_data = JSON.parse(result);
         chart_data.forEach((item, i) => {
