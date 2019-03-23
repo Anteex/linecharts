@@ -7,7 +7,7 @@ loadJSON("chart_data.json")
         const chart_data = JSON.parse(result);
         chart_data.forEach((item, i) => {
             let page = document.createElement('a');
-            page.setAttribute("href", "/?n=" + i);
+            page.setAttribute("href", "?n=" + i);
             page.innerText = i;
             document.getElementById("pages").appendChild(page);
             let space = document.createElement("span");
