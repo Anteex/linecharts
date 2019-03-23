@@ -5,20 +5,12 @@ import toggleDisplayMode from './displaymode.js';
 loadJSON("chart_data.json")
     .then((result) => {
         const chart_data = JSON.parse(result);
-        chart_data.forEach((item, i) => {
-            let page = document.createElement('a');
-            page.setAttribute("href", "?n=" + i);
-            page.innerText = i;
-            document.getElementById("pages").appendChild(page);
-            let space = document.createElement("span");
-            space.classList.add("sps");
-            document.getElementById("pages").appendChild(space);
-        });
-        let url = new URL(window.location.href);
-        let n = url.searchParams.get("n");
-        if (!n) {n = 0};
-        const data = chart_data[n];
-        const chart = new Chart("graph-area", "graph-legend", data);
+
+        const chart0 = new Chart("graph-area-0", "graph-legend-0", chart_data[0]);
+        const chart1 = new Chart("graph-area-1", "graph-legend-1", chart_data[1]);
+        const chart2 = new Chart("graph-area-2", "graph-legend-2", chart_data[2]);
+        const chart3 = new Chart("graph-area-3", "graph-legend-3", chart_data[3]);
+        const chart4 = new Chart("graph-area-4", "graph-legend-4", chart_data[4]);
     })
     .catch((error) => {
         console.error("Error loading JSON data: " + error);

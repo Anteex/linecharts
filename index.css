@@ -3,9 +3,9 @@ html, body {
     font-family: Arial;
 }
 
-#graph-area {
+.graph-area {
     width: 100%;
-    height: 70%;
+    height: 70vh;
     position: relative;
 }
 
@@ -27,7 +27,7 @@ html, body {
     padding-right: 10px;
 }
 
-#graph-legend {
+.graph-legend {
     display: flex;
     padding: 25px;
 }
@@ -104,8 +104,9 @@ html, body {
     margin-right: 0.5em;
 }
 
-.center {
+.display-mode {
     text-align: center;
     font-size: 1.2em;
     cursor: pointer;
+    margin-bottom: 10vh;
 }
