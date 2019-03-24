@@ -66,6 +66,7 @@ export default class Chart {
 
     graphSetFrame(frame) {
         this.graph.setFrame(frame);
+        this.graph.clearForeground();
         this.graph.draw(this.lines, { colors: this.data.colors, names: this.data.names });
         this.graph.drawBackground();
     }

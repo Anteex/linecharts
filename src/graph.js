@@ -18,8 +18,7 @@ export default class Graph extends Container {
         };
 
         this.canvasFore.onmouseout = () => {
-            this.contextFore.clearRect(0, 0, this.width, this.height)
-            this.popup.style.display = 'none';
+            this.clearForeground();
         }
 
     }
@@ -105,8 +104,13 @@ export default class Graph extends Container {
         document.getElementById(this.nodeId).appendChild(this.popup);
     }
 
-    drawForeground(i, y = 0) {
+    clearForeground() {
         this.contextFore.clearRect(0, 0, this.width, this.height);
+        this.popup.style.display = 'none';
+    }
+
+    drawForeground(i, y = 0) {
+        this.clearForeground();
 
         this.contextFore.beginPath();
         this.contextFore.lineWidth = "2";
@@ -134,6 +138,7 @@ export default class Graph extends Container {
         html += "</div>"
 
         this.popup.innerHTML = html;
+        this.popup.style.display = 'block';
         if (this.popup.clientWidth < this.width - (this.left + 5 * this.padding + Math.round(i * this.scaleX))) {
             this.popup.style.left = this.left + 3 * this.padding + Math.round(i * this.scaleX) + "px";
             this.popup.style.right = "";
@@ -150,8 +155,6 @@ export default class Graph extends Container {
                 this.popup.style.top = y - this.popup.clientHeight + "px";
             }
         }
-        this.popup.style.display = 'block';
-
     }
 
     getFrame () {
