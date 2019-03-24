@@ -12,7 +12,7 @@ export default class Preview extends Container {
         const getMouseX = (e) => {
             let x;
             if (!!e.touches && e.touches.length > 0) {
-                x = e.touches[0].pageX
+                x = e.touches[0].clientX
             } else {
                 x = e.x
             }
@@ -24,7 +24,7 @@ export default class Preview extends Container {
         const getMouseY = (e) => {
             let y;
             if (!!e.touches && e.touches.length > 0) {
-                y = e.touches[0].pageY
+                y = e.touches[0].clientY
             } else {
                 y = e.y
             }
