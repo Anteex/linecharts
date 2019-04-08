@@ -58,7 +58,7 @@ export default class Graph extends Container {
 
     drawGrid() {
         this.contextBack.clearRect(0, 0, this.width, this.height + 30);
-        let axis = this.axis_numbers(this.min, this.max);
+        let axis = this.axis_numbers(this.getMin(1), this.getMax(1));
         this.contextBack.beginPath();
         this.contextBack.lineWidth = "1";
         this.contextBack.textAlign = "left";
@@ -67,12 +67,12 @@ export default class Graph extends Container {
             this.contextBack.strokeStyle = "#182D3B";
             this.contextBack.globalAlpha = 0.1;
             this.contextBack.beginPath();
-            this.contextBack.moveTo(this.left + this.padding, this.height - this.padding - (Math.round(axis[i] - this.min) * this.scaleY));
-            this.contextBack.lineTo(this.left + this.width - this.padding, this.height - this.padding - (Math.round(axis[i] - this.min) * this.scaleY));
+            this.contextBack.moveTo(this.left + this.padding, this.height - this.padding - (Math.round(axis[i] - this.getMin(1)) * this.getScaleY(1)));
+            this.contextBack.lineTo(this.left + this.width - this.padding, this.height - this.padding - (Math.round(axis[i] - this.getMin(1)) * this.getScaleY(1)));
             this.contextBack.stroke();
             this.contextBack.globalAlpha = 1;
             this.contextBack.strokeStyle = "#8E8E93";
-            this.contextBack.fillText(this.wellLooked(axis[i]), this.left + this.padding, this.height - 2 * this.padding - (Math.round(axis[i] - this.min) * this.scaleY));
+            this.contextBack.fillText(this.wellLooked(axis[i]), this.left + this.padding, this.height - 2 * this.padding - (Math.round(axis[i] - this.getMin(1)) * this.getScaleY(1)));
         }
         this.contextBack.textAlign = "center";
         let prevRight = 0;
@@ -130,7 +130,7 @@ export default class Graph extends Container {
         for (let j = 1; j < this.data.columns.length; j++) {
             if (this.lineNames.includes(this.data.columns[j][0])) {
                 this.contextFore.beginPath();
-                this.contextFore.arc(this.left + this.padding + Math.round(i * this.scaleX), this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.min) * this.scaleY), 5, 0, 2 * Math.PI, false);
+                this.contextFore.arc(this.left + this.padding + Math.round(i * this.scaleX), this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.min) * this.getScaleY(1)), 5, 0, 2 * Math.PI, false);
                 this.contextFore.fillStyle = bgColor;
                 this.contextFore.fill();
                 this.contextFore.lineWidth = "3";
@@ -181,51 +181,6 @@ export default class Graph extends Container {
         } else {
             return x;
         }
-    }
-
-    axis_numbers(a, b) {
-        const least = 4;
-        const maximum = 8;
-        const deviders = [10, 5, 2, 1];
-
-        const digits = (x) => {
-            return x.toString().length
-        };
-
-        let minimal = 0;
-        let index = 0;
-        deviders.forEach((devider, i) => {
-            let amount = Math.round((b - a) / (devider * Math.pow(10, (digits(b - a) - 2))));
-            if (amount > least) {
-                if (minimal > 0) {
-                    if (amount < minimal) {
-                        minimal = amount;
-                        index = i;
-                    }
-                } else {
-                    minimal = amount;
-                    index = i;
-                }
-            }
-        });
-
-        let step = deviders[index] * Math.pow(10, (digits(b - a) - 2));
-
-        let start = Math.ceil(a / step) * step;
-
-        let result = [];
-
-        for (let i = 0; i < minimal; i++) {
-            result.push(start + i * step);
-        }
-
-        while (result.length > maximum) {
-            for (let i = 0; i < result.length; i++) {
-                result.splice(i + 1, 2);
-            }
-        }
-
-        return result;
     }
 
     dateConvert(timestamp) {
