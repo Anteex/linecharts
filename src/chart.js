@@ -40,7 +40,7 @@ export default class Chart {
     }
 
     initSizes() {
-        const previewRate = 0.20;
+        const previewRate = 0.10;
 
         this.width  = document.getElementById(this.nodeId).clientWidth;
         this.height = document.getElementById(this.nodeId).clientHeight;
@@ -72,7 +72,6 @@ export default class Chart {
     }
 
     linesToggle(lineKey) {
-        return () => {
             if (this.lines.includes(lineKey)) {
                 this.lines.splice(this.lines.indexOf(lineKey), 1);
             } else {
@@ -81,7 +80,6 @@ export default class Chart {
             this.graph.draw(this.lines, { colors: this.data.colors, names: this.data.names });
             this.graph.drawBackground();
             this.preview.draw(this.lines, { colors: this.data.colors, names: this.data.names });
-        }
     }
 
     refresh() {

@@ -48,49 +48,50 @@ export default class Container {
 
         let realMax, realMin;
 
-        if (this.lineNames.length > 0) {
-            let data = [];
-            for (let i = 1; i < this.data.columns.length; i++) {
-                if (lineNames.includes(this.data.columns[i][0])) {
-                    data = [...data, ...this.data.columns[i].slice(this.frame.start, this.frame.end)]
-                }
-            }
+        requestAnimationFrame( () => {
 
-            for (let i = 0; i < data.length; i++) {
-                if (realMax !== undefined) {
-                    if (realMax < data[i]) {
+            if (this.lineNames.length > 0) {
+                let data = [];
+                for (let i = 1; i < this.data.columns.length; i++) {
+                    if (lineNames.includes(this.data.columns[i][0])) {
+                        data = [...data, ...this.data.columns[i].slice(this.frame.start, this.frame.end)]
+                    }
+                }
+
+                for (let i = 0; i < data.length; i++) {
+                    if (realMax !== undefined) {
+                        if (realMax < data[i]) {
+                            realMax = data[i]
+                        }
+                    } else {
                         realMax = data[i]
                     }
-                } else {
-                    realMax = data[i]
-                }
-                if (realMin !== undefined) {
-                    if (realMin > data[i]) {
+                    if (realMin !== undefined) {
+                        if (realMin > data[i]) {
+                            realMin = data[i]
+                        }
+                    } else {
                         realMin = data[i]
                     }
-                } else {
-                    realMin = data[i]
                 }
-            }
-            let delta = Math.round((realMax - realMin)/50);
-            if (this.max !== undefined) {
-                this.max = Math.abs(realMax - this.max) < delta ? realMax : this.max + Math.round((realMax - this.max)/2);
+                let delta = Math.round((realMax - realMin)/50);
+                if (this.max !== undefined) {
+                    this.max = Math.abs(realMax - this.max) < delta ? realMax : this.max + Math.round((realMax - this.max)/2);
+                } else {
+                    this.max = realMax;
+                }
+                if (this.min !== undefined) {
+                    this.min = Math.abs(realMin - this.min) < delta ? realMin : this.min + Math.round((realMin - this.min)/2);
+                } else {
+                    this.min = realMin;
+                }
+                this.scaleY = (this.height - 2 * this.padding) / (this.max - this.min);
             } else {
-                this.max = realMax;
+                this.max = undefined;
+                this.min = undefined;
+                this.scaleY = 0;
             }
-            if (this.min !== undefined) {
-                this.min = Math.abs(realMin - this.min) < delta ? realMin : this.min + Math.round((realMin - this.min)/2);
-            } else {
-                this.min = realMin;
-            }
-            this.scaleY = (this.height - 2 * this.padding) / (this.max - this.min);
-        } else {
-            this.max = undefined;
-            this.min = undefined;
-            this.scaleY = 0;
-        }
 
-        requestAnimationFrame( () => {
             this.drawLines(lineNames);
             if (this.max !== realMax || this.min !== realMin) {
                 this.draw(lineNames);

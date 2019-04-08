@@ -61,14 +61,18 @@ export default class Graph extends Container {
         let axis = this.axis_numbers(this.min, this.max);
         this.contextBack.beginPath();
         this.contextBack.lineWidth = "1";
-        this.contextBack.strokeStyle = "#ccc";
         this.contextBack.textAlign = "left";
         this.contextBack.font = "12px Arial";
         for (let i=0; i < axis.length; i++) {
+            this.contextBack.strokeStyle = "#182D3B";
+            this.contextBack.globalAlpha = 0.1;
+            this.contextBack.beginPath();
             this.contextBack.moveTo(this.left + this.padding, this.height - this.padding - (Math.round(axis[i] - this.min) * this.scaleY));
             this.contextBack.lineTo(this.left + this.width - this.padding, this.height - this.padding - (Math.round(axis[i] - this.min) * this.scaleY));
             this.contextBack.stroke();
-            this.contextBack.fillText(axis[i], this.left + this.padding, this.height - 2 * this.padding - (Math.round(axis[i] - this.min) * this.scaleY));
+            this.contextBack.globalAlpha = 1;
+            this.contextBack.strokeStyle = "#8E8E93";
+            this.contextBack.fillText(this.wellLooked(axis[i]), this.left + this.padding, this.height - 2 * this.padding - (Math.round(axis[i] - this.min) * this.scaleY));
         }
         this.contextBack.textAlign = "center";
         let prevRight = 0;
@@ -122,7 +126,7 @@ export default class Graph extends Container {
         const body = document.getElementsByTagName("body");
         const bgColor = !!body[0].style.backgroundColor ? body[0].style.backgroundColor : "#fff";
 
-        let html = this.dateConvertWeek(this.data.columns[0][this.frame.start + i]) + '<div class="popupData">';
+        let html = '<b>' + this.dateConvertWeek(this.data.columns[0][this.frame.start + i], true) + '</b>' + '<div class="popupData">';
         for (let j = 1; j < this.data.columns.length; j++) {
             if (this.lineNames.includes(this.data.columns[j][0])) {
                 this.contextFore.beginPath();
@@ -132,7 +136,7 @@ export default class Graph extends Container {
                 this.contextFore.lineWidth = "3";
                 this.contextFore.strokeStyle = this.data.colors[this.data.columns[j][0]];
                 this.contextFore.stroke();
-                html += "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "'><b>" + this.data.columns[j][this.frame.start + i] + "</b></br>" + this.data.names[this.data.columns[j][0]] + "</div>";
+                html += "<div>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.data.columns[j][this.frame.start + i] + "</b></div>";
             }
         }
         html += "</div>"
@@ -161,7 +165,25 @@ export default class Graph extends Container {
         return this.frame;
     }
 
-    axis_numbers(a,b) {
+    wellLooked(x) {
+        if (x > 999 && x < 1000000) {
+            if (Math.round(x / 100) !== Math.round(x / 1000) * 10) {
+                return (x / 1000).toFixed(1) + 'K'
+            } else {
+                return Math.round(x / 1000) + 'K'
+            }
+        } else if (x > 999999) {
+            if (Math.round(x / 100000) !== Math.round(x / 1000000) * 10) {
+                return (x / 1000000).toFixed(1) + 'M'
+            } else {
+                return Math.round(x / 1000000) + 'M'
+            }
+        } else {
+            return x;
+        }
+    }
+
+    axis_numbers(a, b) {
         const least = 4;
         const maximum = 8;
         const deviders = [10, 5, 2, 1];
@@ -211,15 +233,15 @@ export default class Graph extends Container {
         let months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         let month = months[dt.getMonth()];
         let date = dt.getDate();
-        return month + " " + date
+        return date + " " + month
     }
 
-    dateConvertWeek(timestamp) {
+    dateConvertWeek(timestamp, displayYear=false) {
         let dt = new Date(timestamp);
         let days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
         let dayOfWeek = days[dt.getDay()]
-        return dayOfWeek + ", " +this. dateConvert(timestamp)
+        let year = dt.getFullYear();
+        return dayOfWeek + ", " + this. dateConvert(timestamp) + (displayYear ? " " + year : "");
     }
-
 
 }

@@ -9,6 +9,8 @@ export default class Preview extends Container {
 
         this.initCanvasDraw();
 
+        this.delay = 0;
+
         const getMouseX = (e) => {
             let x;
             if (!!e.touches && e.touches.length > 0) {
@@ -170,10 +172,10 @@ export default class Preview extends Container {
     }
 
     drawBackground() {
-        this.contextDraw.beginPath();
+/*        this.contextDraw.beginPath();
         this.contextDraw.lineWidth = "1";
         this.contextDraw.rect(1, 1, this.width - 1, this.height - 1);
-        this.contextDraw.stroke();
+        this.contextDraw.stroke(); */
     }
 
     drawFrame(frame) {
@@ -181,12 +183,14 @@ export default class Preview extends Container {
             this.contextDraw.clearRect(0, 0, this.width, this.height);
 
             this.drawBackground();
-            this.contextDraw.globalAlpha = 0.5;
+            this.contextDraw.globalAlpha = 0.6;
 
-            this.contextDraw.fillRect(0, 0, Math.round(frame.start * this.scaleX), this.height);
-            this.contextDraw.fillRect(Math.round(frame.end * this.scaleX), 0, this.right - Math.round(frame.end * this.scaleX), this.height);
+            this.contextDraw.strokeStyle = "#FFFFFF";
+            this.contextDraw.fillStyle = "#E2EEF9";
+            this.roundRect(this.contextDraw, 0, 0, Math.round(frame.start * this.scaleX), this.height, {tl:10, bl:10}, true);
+            this.roundRect(this.contextDraw, Math.round(frame.end * this.scaleX), 0, this.right - Math.round(frame.end * this.scaleX), this.height, {tr:10, br:10}, true);
 
-            this.contextDraw.globalAlpha = 0.8;
+            this.contextDraw.globalAlpha = 1.0;
 
             this.edges = {
                 left: {
@@ -205,13 +209,72 @@ export default class Preview extends Container {
                 }
             }
 
-            this.contextDraw.fillRect(this.edges.left.left, this.edges.left.top, this.edges.left.width, this.edges.left.height);
-            this.contextDraw.fillRect(this.edges.right.left, this.edges.right.top, this.edges.right.width, this.edges.right.height);
+            this.contextDraw.strokeStyle = "#C0D1E1";
+            this.contextDraw.fillStyle = "#C0D1E1";
+            this.roundRect(this.contextDraw, this.edges.left.left, this.edges.left.top, this.edges.left.width, this.edges.left.height, {tl:5, bl:5}, true);
+            this.roundRect(this.contextDraw, this.edges.right.left, this.edges.right.top, this.edges.right.width, this.edges.right.height, {tr:5, br:5}, true);
 
             this.contextDraw.globalAlpha = 1.0;
 
-            this.onFrameChange(frame);
+            this.contextDraw.lineWidth = 3;
+            this.contextDraw.beginPath();
+            this.contextDraw.moveTo(this.edges.left.left + this.edges.left.width, this.edges.left.top);
+            this.contextDraw.lineTo(this.edges.right.left, this.edges.right.top);
+            this.contextDraw.stroke();
+            this.contextDraw.beginPath();
+            this.contextDraw.moveTo(this.edges.left.left + this.edges.left.width, this.edges.left.top + this.edges.left.height);
+            this.contextDraw.lineTo(this.edges.right.left, this.edges.right.top + this.edges.right.height);
+            this.contextDraw.stroke();
+            this.contextDraw.strokeStyle = "#FFFFFF";
+            this.contextDraw.beginPath();
+            this.contextDraw.moveTo(this.edges.left.left + this.edges.left.width/2, this.edges.left.top + this.edges.left.height/2 - this.edges.left.height/7);
+            this.contextDraw.lineTo(this.edges.left.left + this.edges.left.width/2, this.edges.left.top + this.edges.left.height/2 + this.edges.left.height/7);
+            this.contextDraw.stroke();
+            this.contextDraw.beginPath();
+            this.contextDraw.moveTo(this.edges.right.left + this.edges.right.width/2, this.edges.right.top + this.edges.right.height/2 - this.edges.right.height/7);
+            this.contextDraw.lineTo(this.edges.right.left + this.edges.right.width/2, this.edges.right.top + this.edges.right.height/2 + this.edges.right.height/7);
+            this.contextDraw.stroke();
+
+            this.contextDraw.lineWidth = 1;
+
         });
+
+        this.onFrameChange(frame);
+
+    }
+
+    roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+        if (typeof stroke == 'undefined') {
+            stroke = true;
+        }
+        if (typeof radius === 'undefined') {
+            radius = 5;
+        }
+        if (typeof radius === 'number') {
+            radius = {tl: radius, tr: radius, br: radius, bl: radius};
+        } else {
+            var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
+            for (var side in defaultRadius) {
+                radius[side] = radius[side] || defaultRadius[side];
+            }
+        }
+        ctx.beginPath();
+        ctx.moveTo(x + radius.tl, y);
+        ctx.lineTo(x + width - radius.tr, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+        ctx.lineTo(x + width, y + height - radius.br);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+        ctx.lineTo(x + radius.bl, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+        ctx.lineTo(x, y + radius.tl);
+        ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+        ctx.closePath();
+        if (fill) {
+            ctx.fill();
+        }
+        if (stroke) {
+            ctx.stroke();
+        }
 
     }
 
