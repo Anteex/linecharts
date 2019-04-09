@@ -53,18 +53,32 @@ export default class Container {
             let realMax, realMin;
             if (this.lineNames.length > 0) {
                 let data = [];
-                if (!this.data.y_scaled) {
+                if (!!this.data.y_scaled) {
+                    this.yAxisCount = this.data.columns.length - 1;
+                    for (let i = 1; i < this.data.columns.length; i++) {
+                        data[i-1] = this.data.columns[i].slice(this.frame.start, this.frame.end);
+                    }
+                } else if (!!this.data.stacked) {
+                    this.yAxisCount = 1;
+                    let sum;
+                    data[0] = [];
+                    for (let j = this.frame.start; j < this.frame.end; j++) {
+                        sum = 0;
+                        for (let i = 1; i < this.data.columns.length; i++) {
+                            let name = this.data.columns[i][0];
+                            if (this.lineNames.includes(name)) {
+                                sum += this.data.columns[i][j];
+                            }
+                        }
+                        data[0].push(sum);
+                    }
+                } else {
                     this.yAxisCount = 1;
                     data[0] = [];
                     for (let i = 0; i < (this.data.columns.length-1); i++) {
                         if (lineNames.includes(this.data.columns[i+1][0])) {
                             data[0] = [...data[0], ...this.data.columns[i+1].slice(this.frame.start, this.frame.end)]
                         }
-                    }
-                } else {
-                    this.yAxisCount = this.data.columns.length - 1;
-                    for (let i = 1; i < this.data.columns.length; i++) {
-                        data[i-1] = this.data.columns[i].slice(this.frame.start, this.frame.end);
                     }
                 }
 
@@ -87,6 +101,8 @@ export default class Container {
                             realMin[yAxis] = data[yAxis][i]
                         }
                     }
+                    if (!!this.data.stacked || this.data.types.y0 === 'bar' || !!this.data.percentage) realMin[yAxis] = 0;
+                    if (!!this.data.percentage) realMax[yAxis] = 100;
                 }
 
                 if (lineNames.length > 1 && this.yAxisCount > 1) {
@@ -158,16 +174,60 @@ export default class Container {
 
     drawLines(lineNames) {
         this.context.clearRect(0, 0, this.width, this.height);
-        for (let j = 1; j < this.data.columns.length; j++) {
-            if (lineNames.includes(this.data.columns[j][0])) {
-                this.context.beginPath();
-                this.context.lineWidth = "2";
-                this.context.strokeStyle = this.data.colors[this.data.columns[j][0]];
-                let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
-                for (let i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
-                    this.context.lineTo(this.left + this.padding + Math.round(i * this.scaleX),  this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.getMin(j-1)) * this.getScaleY(j-1)))
+        let base = [];
+        for (let j = this.data.columns.length - 1; j >= 0; j--) {
+            let name = this.data.columns[j][0];
+            if (lineNames.includes(name)) {
+                if (this.data.types[name] === 'line') {
+                    this.context.beginPath();
+                    this.context.lineWidth = "2";
+                    this.context.strokeStyle = this.data.colors[this.data.columns[j][0]];
+                    let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
+                    for (let i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
+                        this.context.lineTo(this.left + this.padding + Math.round(i * this.scaleX),  this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.getMin(j-1)) * this.getScaleY(j-1)))
+                    }
+                    this.context.stroke();
+                } else if (this.data.types[name] === 'bar') {
+                    this.context.fillStyle = this.data.colors[this.data.columns[j][0]];
+                    let append = Math.ceil(15 * (this.frame.end - this.frame.start) / this.width);
+                    for (let i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
+                        let x = this.left + this.padding + Math.round(i * this.scaleX);
+                        base[i] = base[i] === undefined ? (this.height - this.padding) : base[i];
+                        let y =  base[i] - this.data.columns[j][this.frame.start + i] * this.getScaleY(j-1);
+                        let w = Math.ceil(this.scaleX * append);
+                        let h = this.data.columns[j][this.frame.start + i] * this.getScaleY(j-1);
+                        base[i] = y;
+                        this.context.fillRect(x, y, w, h)
+                    }
+                } else if (this.data.types[name] === 'area') {
+                    this.context.beginPath();
+                    this.context.lineWidth = "2";
+                    this.context.strokeStyle = this.data.colors[this.data.columns[j][0]];
+                    let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
+
+                    const sum = (k) => {
+                        let result = 0;
+                        for (let i = 1; i < this.data.columns.length; i++) {
+                            if (lineNames.includes(this.data.columns[i][0])) result += this.data.columns[i][k]
+                        }
+                        return result
+                    }
+                    //debugger
+
+                    for (let i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
+                        base[i] = base[i] === undefined ? (this.height - this.padding) : base[i];
+                        let x = this.left + this.padding + Math.round(i * this.scaleX);
+                        let y;
+                        if (lineNames[0] !== name) {
+                            y = base[i] - (Math.round(this.data.columns[j][this.frame.start + i]*100/sum(this.frame.start + i)) * this.getScaleY(j-1));
+                        } else {
+                            y = this.padding;
+                        }
+                        base[i] = y;
+                        this.context.lineTo(x, y)
+                    }
+                    this.context.stroke();
                 }
-                this.context.stroke();
             }
         }
     }
