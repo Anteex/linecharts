@@ -58,23 +58,42 @@ export default class Graph extends Container {
 
     drawGrid() {
         this.contextBack.clearRect(0, 0, this.width, this.height + 30);
-        let axis = this.axis_numbers(this.getMin(1), this.getMax(1));
-        this.contextBack.beginPath();
-        this.contextBack.lineWidth = "1";
-        this.contextBack.textAlign = "left";
-        this.contextBack.font = "12px Arial";
-        for (let i=0; i < axis.length; i++) {
-            this.contextBack.strokeStyle = "#182D3B";
-            this.contextBack.globalAlpha = 0.1;
+        for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
+            let axis = this.axis_numbers(this.getMin(yAxis), this.getMax(yAxis));
             this.contextBack.beginPath();
-            this.contextBack.moveTo(this.left + this.padding, this.height - this.padding - (Math.round(axis[i] - this.getMin(1)) * this.getScaleY(1)));
-            this.contextBack.lineTo(this.left + this.width - this.padding, this.height - this.padding - (Math.round(axis[i] - this.getMin(1)) * this.getScaleY(1)));
-            this.contextBack.stroke();
-            this.contextBack.globalAlpha = 1;
-            this.contextBack.strokeStyle = "#8E8E93";
-            this.contextBack.fillText(this.wellLooked(axis[i]), this.left + this.padding, this.height - 2 * this.padding - (Math.round(axis[i] - this.getMin(1)) * this.getScaleY(1)));
+            this.contextBack.lineWidth = "1";
+            this.contextBack.textAlign = "left";
+            this.contextBack.font = "12px Arial";
+            for (let i = 0; i < axis.length; i++) {
+                if (yAxis === 0) {
+                    this.contextBack.strokeStyle = "#182D3B";
+                    this.contextBack.globalAlpha = 0.1;
+                    this.contextBack.beginPath();
+                    this.contextBack.moveTo(this.left + this.padding, this.height - this.padding - (Math.round(axis[i] - this.getMin(yAxis)) * this.getScaleY(yAxis)));
+                    this.contextBack.lineTo(this.left + this.width - this.padding, this.height - this.padding - (Math.round(axis[i] - this.getMin(yAxis)) * this.getScaleY(yAxis)));
+                    this.contextBack.stroke();
+                    this.contextBack.globalAlpha = 1;
+                }
+                if (this.yAxisCount === 1) {
+                    this.contextBack.fillStyle = "#8E8E93";
+                } else {
+                    this.contextBack.fillStyle = this.data.colors[this.lineNames[yAxis]];
+                }
+                if (this.lineNames.includes(this.data.columns[yAxis+1][0])) {
+                    let x;
+                    if (yAxis % 2 === 0) {
+                        this.contextBack.textAlign = 'left';
+                        x = this.left + this.padding + yAxis * 5 * this.padding;
+                    } else {
+                        this.contextBack.textAlign = 'right';
+                        x = this.right - this.padding - ((yAxis - 1) * 5 * this.padding);
+                    }
+                    this.contextBack.fillText(this.wellLooked(axis[i]), x, this.height - 2 * this.padding - (Math.round(axis[i] - this.getMin(yAxis)) * this.getScaleY(yAxis)));
+                }
+            }
         }
         this.contextBack.textAlign = "center";
+        this.contextBack.fillStyle = "#8E8E93";
         let prevRight = 0;
         for (let i = 1; i < (this.frame.end - this.frame.start) - 1; i++) {
             let txt = this.dateConvert(this.data.columns[0][this.frame.start + i]);

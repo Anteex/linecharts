@@ -47,10 +47,10 @@ export default class Container {
 
     draw(lineNames) {
         this.lineNames = lineNames;
-
-        let realMax, realMin;
         this.scaleY = [];
+
         requestAnimationFrame( () => {
+            let realMax, realMin;
             if (this.lineNames.length > 0) {
                 let data = [];
                 if (!this.data.y_scaled) {
@@ -67,46 +67,89 @@ export default class Container {
                         data[i-1] = this.data.columns[i].slice(this.frame.start, this.frame.end);
                     }
                 }
+
+                realMax = [];
+                realMin = [];
                 for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
-                    realMax = undefined;
-                    realMin = undefined;
                     for (let i = 0; i < data[yAxis].length; i++) {
-                        if (realMax !== undefined) {
-                            if (realMax < data[yAxis][i]) {
-                                realMax = data[yAxis][i]
+                        if (realMax[yAxis] !== undefined) {
+                            if (realMax[yAxis] < data[yAxis][i]) {
+                                realMax[yAxis] = data[yAxis][i]
                             }
                         } else {
-                            realMax = data[yAxis][i]
+                            realMax[yAxis] = data[yAxis][i]
                         }
-                        if (realMin !== undefined) {
-                            if (realMin > data[yAxis][i]) {
-                                realMin = data[yAxis][i]
+                        if (realMin[yAxis] !== undefined) {
+                            if (realMin[yAxis] > data[yAxis][i]) {
+                                realMin[yAxis] = data[yAxis][i]
                             }
                         } else {
-                            realMin = data[yAxis][i]
+                            realMin[yAxis] = data[yAxis][i]
                         }
                     }
-                    let delta = Math.round((realMax - realMin)/50);
+                }
+
+                if (lineNames.length > 1 && this.yAxisCount > 1) {
+
+                    let axisScale = [];
+                    let maxLength = 0;
+
+                    for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
+                        axisScale[yAxis] = this.axis_numbers(realMin[yAxis], realMax[yAxis]);
+                        if (axisScale[yAxis].length > maxLength) maxLength = axisScale[yAxis].length
+                    }
+
+                    const step = (array) => {
+                        if (array.length > 2) {
+                            return array[1] - array[0]
+                        } else {
+                            return 0
+                        }
+                    };
+
+                    for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
+                        for (let i=axisScale[yAxis].length; i < maxLength; i++) {
+                            axisScale[yAxis].push(axisScale[yAxis][i-1] + step(axisScale[yAxis]))
+                        }
+                    }
+
+                    for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
+                        realMin[yAxis] = axisScale[yAxis][0] - step(axisScale[yAxis]);
+                        realMax[yAxis] = axisScale[yAxis][maxLength-1] + step(axisScale[yAxis]);
+                    }
+                }
+
+                for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
+                    let delta = Math.round((realMax[yAxis] - realMin[yAxis])/50);
                     if (this.max[yAxis] !== undefined) {
-                        this.max[yAxis] = Math.abs(realMax - this.max[yAxis]) < delta ? realMax : this.max[yAxis] + Math.round((realMax - this.max[yAxis])/2);
+                        this.max[yAxis] = Math.abs(realMax[yAxis] - this.max[yAxis]) < delta ? realMax[yAxis] : this.max[yAxis] + Math.round((realMax[yAxis] - this.max[yAxis])/2);
                     } else {
-                        this.max[yAxis] = realMax;
+                        this.max[yAxis] = realMax[yAxis];
                     }
                     if (this.min[yAxis] !== undefined) {
-                        this.min[yAxis] = Math.abs(realMin - this.min[yAxis]) < delta ? realMin : this.min[yAxis] + Math.round((realMin - this.min[yAxis])/2);
+                        this.min[yAxis] = Math.abs(realMin[yAxis] - this.min[yAxis]) < delta ? realMin[yAxis] : this.min[yAxis] + Math.round((realMin[yAxis] - this.min[yAxis])/2);
                     } else {
-                        this.min[yAxis] = realMin;
+                        this.min[yAxis] = realMin[yAxis];
                     }
                     this.scaleY[yAxis] = (this.height - 2 * this.padding) / (this.max[yAxis] - this.min[yAxis]);
-                    console.log(realMin + ":" + realMax + " = " + this.axis_numbers(realMin, realMax));
                 }
+
             } else {
                 this.max = [];
                 this.min = [];
                 this.scaleY[0] = 0;
             }
             this.drawLines(lineNames);
-            if (this.max[this.yAxisCount-1] !== realMax || this.min[this.yAxisCount-1] !== realMin) {
+            let redraw = false;
+            for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
+                if (!!realMax && !!realMin) {
+                    if (this.max[yAxis] !== realMax[yAxis] || this.min[yAxis] !== realMin[yAxis]) {
+                        redraw = true;
+                        break
+                    }
+                }
+            }
+            if (redraw) {
                 this.draw(lineNames);
                 this.drawBackground();
             }

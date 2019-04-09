@@ -76,6 +76,7 @@ export default class Chart {
                 this.lines.splice(this.lines.indexOf(lineKey), 1);
             } else {
                 this.lines.push(lineKey);
+                this.lines.sort();
             }
             this.graph.draw(this.lines, { colors: this.data.colors, names: this.data.names });
             this.graph.drawBackground();
