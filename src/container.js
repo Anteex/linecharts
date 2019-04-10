@@ -14,6 +14,7 @@ export default class Container {
         });
         this.max = [];
         this.min = [];
+        this.append = 1;
     }
 
     initCanvas() {
@@ -184,6 +185,7 @@ export default class Container {
                     this.context.lineWidth = "2";
                     this.context.strokeStyle = this.data.colors[this.data.columns[j][0]];
                     let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
+                    this.append = append;
                     for (let i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
                         this.context.lineTo(this.left + this.padding + Math.round(i * this.scaleX),  this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.getMin(j-1)) * this.getScaleY(j-1)))
                     }
@@ -192,6 +194,7 @@ export default class Container {
                     this.context.globalAlpha = 1;
                     this.context.fillStyle = this.data.colors[this.data.columns[j][0]];
                     let append = Math.ceil(15 * (this.frame.end - this.frame.start) / this.width);
+                    this.append = append;
                     let prevX = 0;
                     const offset = (i) => i - (this.frame.start + (append - this.frame.start % append));
                     for (let i = -1 * offset(0); i < this.frame.end + 2*append; i = i + append) {
@@ -217,6 +220,7 @@ export default class Container {
                     this.context.fillStyle = this.data.colors[this.data.columns[j][0]];
                     this.context.beginPath();
                     let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
+                    this.append = append;
 
                     const sum = (k) => {
                         let result = 0;

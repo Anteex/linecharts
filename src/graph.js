@@ -9,7 +9,7 @@ export default class Graph extends Container {
         this.initCanvasBackground();
         this.initCanvasForeground();
 
-        this.canvasFore.onmousedown = (e) => {
+        this.canvasFore.onmousemove = (e) => {
             let x = e.x - this.canvasFore.getBoundingClientRect().x;
             let y = e.y - this.canvasFore.getBoundingClientRect().y;
             if (Math.round(x / this.scaleX) >= 0 && Math.round(x / this.scaleX) < (this.frame.end - this.frame.start)) {
@@ -135,15 +135,33 @@ export default class Graph extends Container {
     drawForeground(i, y = 0) {
         this.clearForeground();
 
-        this.contextFore.beginPath();
-        this.contextFore.lineWidth = "1";
-        this.contextFore.strokeStyle = "#182D3B";
-        this.contextFore.globalAlpha = 0.1;
-        this.contextFore.moveTo(this.left + this.padding + Math.round(i * this.scaleX), this.top);
-        this.contextFore.lineTo(this.left + this.padding + Math.round(i * this.scaleX), this.height);
-        this.contextFore.stroke();
-        this.contextFore.globalAlpha = 1;
+        if (this.data.types.y0 === 'line' || this.data.types.y0 === 'area') {
+            this.contextFore.beginPath();
+            this.contextFore.lineWidth = "1";
+            this.contextFore.strokeStyle = "#182D3B";
+            this.contextFore.globalAlpha = 0.1;
+            this.contextFore.moveTo(this.left + this.padding + Math.round(i * this.scaleX), this.top);
+            this.contextFore.lineTo(this.left + this.padding + Math.round(i * this.scaleX), this.height);
+            this.contextFore.stroke();
+        } else if (this.data.types.y0 === 'bar') {
+            this.contextFore.globalAlpha = 0.5;
+            this.contextFore.fillStyle = "#FFFFFF";
+            this.contextFore.beginPath();
+            const offset = (i) => i - (i % this.append);
+            let l = Math.floor((offset(i) - this.frame.start % this.append) * this.scaleX);
+            console.log(l);
+            console.log(this.frame.start + i - (this.frame.start + i) % this.append);
+            this.contextFore.rect(this.left + this.padding, this.padding, l, this.height - this.padding);
+            this.contextFore.fill();
+            this.contextFore.beginPath();
+            let r = l + Math.floor(this.scaleX * this.append);
+            this.contextFore.rect(this.left + this.padding + r, this.padding, this.width - this.padding - r, this.height - this.padding);
+            this.contextFore.fill();
+            console.log(this.frame.start+i, this.frame.start, this.frame.end)
 
+        }
+        this.contextFore.globalAlpha = 1;
+return
         const body = document.getElementsByTagName("body");
         const bgColor = !!body[0].style.backgroundColor ? body[0].style.backgroundColor : "#fff";
 
@@ -156,7 +174,7 @@ export default class Graph extends Container {
             if (this.lineNames.includes(name)) {
                 if (this.data.types[name] === 'line') {
                     this.contextFore.beginPath();
-                    this.contextFore.arc(this.left + this.padding + Math.round(i * this.scaleX), this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.min) * this.getScaleY(1)), 5, 0, 2 * Math.PI, false);
+                    this.contextFore.arc(this.left + this.padding + Math.round(i * this.scaleX), this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.getMin(j-1)) * this.getScaleY(j-1)), 5, 0, 2 * Math.PI, false);
                     this.contextFore.fillStyle = bgColor;
                     this.contextFore.fill();
                     this.contextFore.lineWidth = "3";
