@@ -9,18 +9,13 @@ export default class Graph extends Container {
         this.initCanvasBackground();
         this.initCanvasForeground();
 
-        this.canvasFore.onmousemove = (e) => {
+        this.canvasFore.onmousedown = (e) => {
             let x = e.x - this.canvasFore.getBoundingClientRect().x;
             let y = e.y - this.canvasFore.getBoundingClientRect().y;
             if (Math.round(x / this.scaleX) >= 0 && Math.round(x / this.scaleX) < (this.frame.end - this.frame.start)) {
                 this.drawForeground(Math.round(x / this.scaleX), y)
             }
         };
-
-        this.canvasFore.onmouseout = () => {
-            this.clearForeground();
-        }
-
     }
 
     refresh(position) {
@@ -45,7 +40,7 @@ export default class Graph extends Container {
         this.canvasBack.width  = this.width;
         this.canvasBack.height = this.height + 30;
         this.canvasBack.style.position = "absolute";
-        this.canvasBack.style.zIndex = 5;
+        this.canvasBack.style.zIndex = 12;
         document.getElementById(this.nodeId).appendChild(this.canvasBack);
         this.contextBack = this.canvasBack.getContext("2d");
     }
@@ -75,11 +70,16 @@ export default class Graph extends Container {
                     this.contextBack.globalAlpha = 1;
                 }
                 if (this.yAxisCount === 1) {
-                    this.contextBack.fillStyle = "#8E8E93";
+                    if (!this.data.percentage) {
+                        this.contextBack.fillStyle = "#8E8E93";
+                    } else {
+                        this.contextBack.fillStyle = "#252529";
+                        this.contextBack.globalAlpha = 0.5;
+                    }
                 } else {
                     this.contextBack.fillStyle = this.data.colors[this.lineNames[yAxis]];
                 }
-                if (this.lineNames.includes(this.data.columns[yAxis+1][0])) {
+                if (this.lineNames.includes(this.data.columns[yAxis+1][0]) || this.yAxisCount == 1) {
                     let x;
                     if (yAxis % 2 === 0) {
                         this.contextBack.textAlign = 'left';
@@ -136,47 +136,66 @@ export default class Graph extends Container {
         this.clearForeground();
 
         this.contextFore.beginPath();
-        this.contextFore.lineWidth = "2";
-        this.contextFore.strokeStyle = "#555";
+        this.contextFore.lineWidth = "1";
+        this.contextFore.strokeStyle = "#182D3B";
+        this.contextFore.globalAlpha = 0.1;
         this.contextFore.moveTo(this.left + this.padding + Math.round(i * this.scaleX), this.top);
         this.contextFore.lineTo(this.left + this.padding + Math.round(i * this.scaleX), this.height);
         this.contextFore.stroke();
+        this.contextFore.globalAlpha = 1;
 
         const body = document.getElementsByTagName("body");
         const bgColor = !!body[0].style.backgroundColor ? body[0].style.backgroundColor : "#fff";
 
-        let html = '<b>' + this.dateConvertWeek(this.data.columns[0][this.frame.start + i], true) + '</b>' + '<div class="popupData">';
+        let header = this.dateConvertWeek(this.data.columns[0][this.frame.start + i], true);
+        header = header.replace(/\s/g, "&nbsp;");
+        let html = '<div class="popupData"><div class="popupHeader"><b>' + header + '</b>' + '</div><div class="arrow">&rsaquo;</div>';
+        let total = 0; let perc = 0;
         for (let j = 1; j < this.data.columns.length; j++) {
-            if (this.lineNames.includes(this.data.columns[j][0])) {
-                this.contextFore.beginPath();
-                this.contextFore.arc(this.left + this.padding + Math.round(i * this.scaleX), this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.min) * this.getScaleY(1)), 5, 0, 2 * Math.PI, false);
-                this.contextFore.fillStyle = bgColor;
-                this.contextFore.fill();
-                this.contextFore.lineWidth = "3";
-                this.contextFore.strokeStyle = this.data.colors[this.data.columns[j][0]];
-                this.contextFore.stroke();
-                html += "<div>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.data.columns[j][this.frame.start + i] + "</b></div>";
+            let name = this.data.columns[j][0];
+            if (this.lineNames.includes(name)) {
+                if (this.data.types[name] === 'line') {
+                    this.contextFore.beginPath();
+                    this.contextFore.arc(this.left + this.padding + Math.round(i * this.scaleX), this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.min) * this.getScaleY(1)), 5, 0, 2 * Math.PI, false);
+                    this.contextFore.fillStyle = bgColor;
+                    this.contextFore.fill();
+                    this.contextFore.lineWidth = "3";
+                    this.contextFore.strokeStyle = this.data.colors[this.data.columns[j][0]];
+                    this.contextFore.stroke();
+                    html += "<div class='popupHeader'>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.data.columns[j][this.frame.start + i] + "</b></div>";
+                }
+                if (this.data.percentage) {
+                    const sum = (k) => {
+                        let result = 0;
+                        for (let i = 1; i < this.data.columns.length; i++) {
+                            if (this.lineNames.includes(this.data.columns[i][0])) result += this.data.columns[i][k]
+                        }
+                        return result
+                    };
+
+                    if (this.lineNames[this.lineNames.length] !== name) {
+                        perc = Math.round(this.data.columns[j][this.frame.start + i] * 100 / sum(this.frame.start + i));
+                        total += perc;
+                    } else {
+                        perc = 100 - total;
+                    }
+
+                    html += "<div style='text-align: right;padding-right: 5px'><b>" + perc + "%</b></div><div>" + this.data.names[name] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.data.columns[j][this.frame.start + i] + "</b></div>";
+                }
             }
         }
         html += "</div>"
 
         this.popup.innerHTML = html;
         this.popup.style.display = 'block';
-        if (this.popup.clientWidth < this.width - (this.left + 5 * this.padding + Math.round(i * this.scaleX))) {
-            this.popup.style.left = this.left + 3 * this.padding + Math.round(i * this.scaleX) + "px";
-            this.popup.style.right = "";
-        } else {
-            this.popup.style.right = (this.right + 3 * this.padding - Math.round(i * this.scaleX)) + "px";
-            this.popup.style.left = "";
-        }
+        let pX = this.left + Math.round(i * this.scaleX / 2);
+        if (pX < this.left) pX = 0;
+        if (pX + this.popup.clientWidth > this.left + this.width) pX = this.left + this.width - this.popup.clientWidth;
+        this.popup.style.left = pX + "px";
         if (y === 0) {
             this.popup.style.top = this.top + 2 * this.padding + "px";
         } else {
-            if (y + this.popup.clientHeight < this.height) {
-                this.popup.style.top = y + "px";
-            } else {
-                this.popup.style.top = y - this.popup.clientHeight + "px";
-            }
+            this.popup.style.top = y - Math.round(this.popup.clientHeight/2) + "px";
         }
     }
 
@@ -215,7 +234,7 @@ export default class Graph extends Container {
         let days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
         let dayOfWeek = days[dt.getDay()]
         let year = dt.getFullYear();
-        return dayOfWeek + ", " + this. dateConvert(timestamp) + (displayYear ? " " + year : "");
+        return dayOfWeek + ", " + this.dateConvert(timestamp) + (displayYear ? " " + year : "");
     }
 
 }

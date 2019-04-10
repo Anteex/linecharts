@@ -175,6 +175,7 @@ export default class Container {
     drawLines(lineNames) {
         this.context.clearRect(0, 0, this.width, this.height);
         let base = [];
+        let newBase = [];
         for (let j = this.data.columns.length - 1; j >= 0; j--) {
             let name = this.data.columns[j][0];
             if (lineNames.includes(name)) {
@@ -188,21 +189,33 @@ export default class Container {
                     }
                     this.context.stroke();
                 } else if (this.data.types[name] === 'bar') {
+                    this.context.globalAlpha = 1;
                     this.context.fillStyle = this.data.colors[this.data.columns[j][0]];
                     let append = Math.ceil(15 * (this.frame.end - this.frame.start) / this.width);
-                    for (let i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
-                        let x = this.left + this.padding + Math.round(i * this.scaleX);
-                        base[i] = base[i] === undefined ? (this.height - this.padding) : base[i];
-                        let y =  base[i] - this.data.columns[j][this.frame.start + i] * this.getScaleY(j-1);
-                        let w = Math.ceil(this.scaleX * append);
-                        let h = this.data.columns[j][this.frame.start + i] * this.getScaleY(j-1);
-                        base[i] = y;
+                    let prevX = 0;
+                    const offset = (i) => i - (this.frame.start + (append - this.frame.start % append));
+                    for (let i = -1 * offset(0); i < this.frame.end + 2*append; i = i + append) {
+                        let x = this.left + this.padding + Math.floor(offset(i) * this.scaleX) - Math.floor(this.frame.start % append * this.scaleX);
+                        if (x > prevX && prevX !== 0) x = prevX;
+                        base[offset(i)] = base[offset(i)] === undefined ? (this.height - this.padding) : base[offset(i)];
+                        let y =  base[offset(i)] - this.data.columns[j][i] * this.getScaleY(j-1);
+                        let w = Math.floor(this.scaleX * append);
+                        if (x < this.left + this.padding) {
+                            w = w - (this.left + this.padding - x);
+                            x = this.left + this.padding;
+                        }
+                        if (x + w > this.width - this.padding) {
+                            w = this.width - this.padding - x;
+                        }
+                        prevX = x + w;
+                        let h = this.data.columns[j][i] * this.getScaleY(j-1);
+                        base[offset(i)] = y;
                         this.context.fillRect(x, y, w, h)
                     }
+                    this.context.globalAlpha = 1;
                 } else if (this.data.types[name] === 'area') {
+                    this.context.fillStyle = this.data.colors[this.data.columns[j][0]];
                     this.context.beginPath();
-                    this.context.lineWidth = "2";
-                    this.context.strokeStyle = this.data.colors[this.data.columns[j][0]];
                     let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
 
                     const sum = (k) => {
@@ -211,11 +224,12 @@ export default class Container {
                             if (lineNames.includes(this.data.columns[i][0])) result += this.data.columns[i][k]
                         }
                         return result
-                    }
-                    //debugger
+                    };
 
-                    for (let i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
+                    let i;
+                    for (i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
                         base[i] = base[i] === undefined ? (this.height - this.padding) : base[i];
+                        newBase[i] = newBase[i] === undefined ? (this.height - this.padding) : newBase[i];
                         let x = this.left + this.padding + Math.round(i * this.scaleX);
                         let y;
                         if (lineNames[0] !== name) {
@@ -223,10 +237,18 @@ export default class Container {
                         } else {
                             y = this.padding;
                         }
-                        base[i] = y;
+                        newBase[i] = y;
                         this.context.lineTo(x, y)
                     }
-                    this.context.stroke();
+                    this.context.lineTo(this.left + this.padding + Math.round((i-append) * this.scaleX), base[(i-append)]);
+                    for (let m = i - append; m >= 0; m = m - append) {
+                        let x = this.left + this.padding + Math.round(m * this.scaleX);
+                        let y = Math.ceil(base[m]);
+                        base[m] = newBase[m];
+                        this.context.lineTo(x, y);
+                    }
+                    this.context.closePath();
+                    this.context.fill();
                 }
             }
         }

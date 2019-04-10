@@ -78,6 +78,7 @@ export default class Chart {
                 this.lines.push(lineKey);
                 this.lines.sort();
             }
+            this.graph.clearForeground();
             this.graph.draw(this.lines, { colors: this.data.colors, names: this.data.names });
             this.graph.drawBackground();
             this.preview.draw(this.lines, { colors: this.data.colors, names: this.data.names });
