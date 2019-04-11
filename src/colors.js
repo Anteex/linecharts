@@ -5,6 +5,7 @@ colors.theme = 'day';
 colors.day = {
     background: '#FFF',
     text: '#000',
+    backgroundRGB: "rgb(255, 255, 255)",
     scrollBackground: '#E2EEF9',
     scrollBackgroundOpacity: 0.6,
     scrollSelector: '#C0D1E1',
@@ -19,12 +20,15 @@ colors.day = {
     axisTextV2Y: '#252529',
     axisTextV2YOpacity: 0.5,
     lightenMask: '#FFFFFF',
-    lightenMaskOpacity: 0.5
+    lightenMaskOpacity: 0.5,
+    tooltipBackground: '#FFFFFF',
+    tooltipBorder: '#EEF0F1'
 };
 
 colors.night = {
-    background: '#000',
+    background: '#242F3E',
     text: '#FFF',
+    backgroundRGB: "rgb(36, 47, 62)",
     scrollBackground: '#304259',
     scrollBackgroundOpacity: 0.6,
     scrollSelector: '#56626D',
@@ -39,7 +43,9 @@ colors.night = {
     axisTextV2Y: '#ECF2F8',
     axisTextV2YOpacity: 0.5,
     lightenMask: '#242F3E',
-    lightenMaskOpacity: 0.5
+    lightenMaskOpacity: 0.5,
+    tooltipBackground: '#1C2533',
+    tooltipBorder: '#1C2533'
 };
 
 export { colors };

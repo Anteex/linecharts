@@ -48,7 +48,7 @@ export default class Chart {
         this.graph.setTheme(theme);
         this.graph.drawBackground();
         this.preview.setTheme(theme);
-        this.preview.draw(this.lines);
+        this.preview.drawFrame(this.graph.getFrame());
         this.legend.setTheme(this.theme);
     }
 

@@ -171,6 +171,7 @@ export default class Container {
             }
             if (redraw) {
                 this.draw(lineNames);
+                this.drawBackground();
             }
         });
     }
@@ -216,6 +217,9 @@ export default class Container {
                         }
                         prevX = x + w;
                         let h = this.data.columns[j][i] * this.getScaleY(j-1);
+                        if ((y + h) > (this.height -  this.padding)) {
+                            h = (this.height - this.padding) - y;
+                        }
                         base[offset(i)] = y;
                         this.barsX.push({i, x});
                         this.context.fillRect(x, y, w, h)

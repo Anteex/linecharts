@@ -5,6 +5,7 @@ export default class Legend {
     constructor(nodeIdLegend, data, onToggle) {
         this.nodeIdLegend = nodeIdLegend;
         this.onToggle = onToggle;
+        this.data = data;
         let styleEl = document.createElement('style');
         document.head.appendChild(styleEl);
         let styleSheet = styleEl.sheet;
@@ -21,6 +22,14 @@ export default class Legend {
     }
 
     setTheme(theme) {
+        if (!!this.theme && this.theme !== theme) {
+            for (let key in this.data.names) {
+                let button = document.getElementById(this.nodeIdLegend + '-' + key);
+                if (button.style.backgroundColor === colors[this.theme].backgroundRGB) {
+                    button.style.backgroundColor = colors[theme].background;
+                }
+            }
+        }
         this.theme = theme;
     }
 
@@ -33,7 +42,7 @@ export default class Legend {
                 button.style.paddingRight = "0px";
             }
             if (!!button.style.backgroundColor){
-                if (button.style.backgroundColor !== "rgb(255, 255, 255)") {
+                if (button.style.backgroundColor !== colors[this.theme].backgroundRGB ) {
                     button.style.backgroundColor = colors[this.theme].background;
                     button.style.color = color;
                     button.innerText = button.innerText.substring(1);

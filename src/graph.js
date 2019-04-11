@@ -55,6 +55,7 @@ export default class Graph extends Container {
     drawGrid() {
         this.contextBack.clearRect(0, 0, this.width, this.height + 30);
         this.setTextInterval();
+        this.contextBack.globalAlpha = 1.0;
         for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
             let axis = this.axis_numbers(this.getMin(yAxis), this.getMax(yAxis));
             this.contextBack.beginPath();
@@ -244,6 +245,8 @@ export default class Graph extends Container {
         html += "</div>"
 
         this.popup.innerHTML = html;
+        this.popup.style.backgroundColor = colors[this.theme].tooltipBackground;
+        this.popup.style.borderColor = colors[this.theme].tooltipBorder;
         this.popup.style.display = 'block';
         let pX = this.left + Math.round(i * this.scaleX / 2);
         if (pX < this.left) pX = 0;
@@ -252,7 +255,11 @@ export default class Graph extends Container {
         if (mY === 0) {
             this.popup.style.top = this.top + 2 * this.padding + "px";
         } else {
-            this.popup.style.top = mY - Math.round(this.popup.clientHeight/2) + "px";
+            if ((mY + Math.round(this.popup.clientHeight/2)) > this.height) {
+                this.popup.style.top = this.top + 2 * this.padding + "px";
+            } else {
+                this.popup.style.top = mY + 2 * this.padding + "px";
+            }
         }
     }
 
