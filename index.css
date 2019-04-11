@@ -1,10 +1,21 @@
 html, body {
     height: 100%;
-    font-family: Arial;
+    font-family: Arial, serif;
 }
 
 h1 {
-    font-size: 1em;
+    font-size: 1.1em;
+}
+
+h2 {
+    font-size: 0.75em;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .graph-area {
@@ -27,7 +38,7 @@ h1 {
     display: grid;
     padding-top: 10px;
     justify-content: space-between;
-    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-columns: 0.5fr 1fr 1fr;
 }
 
 .popupHeader {
@@ -64,7 +75,7 @@ h1 {
     margin-right: 0.5em;
 }
 
-.display-mode {
+#display-mode {
     text-align: center;
     font-size: 1.2em;
     cursor: pointer;
@@ -74,7 +85,6 @@ h1 {
 
 .arrow {
     text-align: right;
-    color: #D2D5D7;
     font-size: 1.5em;
     margin-top: -0.3em;
     margin-bottom: 0.3em;

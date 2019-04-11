@@ -10,27 +10,42 @@
     <script id="chart_data" type="application/json" src="chart_data.json"></script>
     <script type="module" src="src/index.js"></script>
 
-    <h1>Followers</h1>
+    <div class="container">
+        <h1>Followers</h1>
+        <h2 id="graph-area-0-text-interval"></h2>
+    </div>
     <div class="graph-area" id="graph-area-0"></div>
-    <div class="graph-legend" id="graph-legend-0"></div>
+    <div class="graph-legend" id="graph-area-0-legend"></div>
 
-    <h1>Interactions</h1>
+    <div class="container">
+        <h1>Interactions</h1>
+        <h2 id="graph-area-1-text-interval"></h2>
+    </div>
     <div class="graph-area" id="graph-area-1"></div>
-    <div class="graph-legend" id="graph-legend-1"></div>
+    <div class="graph-legend" id="graph-area-1-legend"></div>
 
-    <h1>Messages</h1>
+    <div class="container">
+        <h1>Messages</h1>
+        <h2 id="graph-area-2-text-interval"></h2>
+    </div>
     <div class="graph-area" id="graph-area-2"></div>
-    <div class="graph-legend" id="graph-legend-2"></div>
+    <div class="graph-legend" id="graph-area-2-legend"></div>
 
-    <h1>Views</h1>
+    <div class="container">
+        <h1>Views</h1>
+        <h2 id="graph-area-3-text-interval"></h2>
+    </div>
     <div class="graph-area" id="graph-area-3">.</div>
-    <div class="graph-legend" id="graph-legend-3"></div>
+    <div class="graph-legend" id="graph-area-3-legend"></div>
 
-    <h1>Apps</h1>
+    <div class="container">
+        <h1>Apps</h1>
+        <h2 id="graph-area-4-text-interval"></h2>
+    </div>
     <div class="graph-area" id="graph-area-4"></div>
-    <div class="graph-legend" id="graph-legend-4"></div>
+    <div class="graph-legend" id="graph-area-4-legend"></div>
 
-    <div class="display-mode" onclick="toggleDisplayMode();">Switch to Night Mode</div>
+    <div id="display-mode" onclick="toggleDisplayMode();">Switch to Night Mode</div>
 
 </body>
 </html>

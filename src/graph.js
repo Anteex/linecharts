@@ -1,4 +1,5 @@
 import Container from './container.js'
+import { colors } from './colors.js'
 
 export default class Graph extends Container {
 
@@ -13,7 +14,7 @@ export default class Graph extends Container {
             let x = e.x - this.canvasFore.getBoundingClientRect().x;
             let y = e.y - this.canvasFore.getBoundingClientRect().y;
             if (Math.round(x / this.scaleX) >= 0 && Math.round(x / this.scaleX) < (this.frame.end - this.frame.start)) {
-                this.drawForeground(Math.round(x / this.scaleX), y)
+                this.drawForeground(x, y)
             }
         };
     }
@@ -53,6 +54,7 @@ export default class Graph extends Container {
 
     drawGrid() {
         this.contextBack.clearRect(0, 0, this.width, this.height + 30);
+        this.setTextInterval();
         for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
             let axis = this.axis_numbers(this.getMin(yAxis), this.getMax(yAxis));
             this.contextBack.beginPath();
@@ -61,8 +63,8 @@ export default class Graph extends Container {
             this.contextBack.font = "12px Arial";
             for (let i = 0; i < axis.length; i++) {
                 if (yAxis === 0) {
-                    this.contextBack.strokeStyle = "#182D3B";
-                    this.contextBack.globalAlpha = 0.1;
+                    this.contextBack.strokeStyle = colors[this.theme].gridLines;
+                    this.contextBack.globalAlpha = colors[this.theme].gridLinesOpacity;
                     this.contextBack.beginPath();
                     this.contextBack.moveTo(this.left + this.padding, this.height - this.padding - (Math.round(axis[i] - this.getMin(yAxis)) * this.getScaleY(yAxis)));
                     this.contextBack.lineTo(this.left + this.width - this.padding, this.height - this.padding - (Math.round(axis[i] - this.getMin(yAxis)) * this.getScaleY(yAxis)));
@@ -70,16 +72,17 @@ export default class Graph extends Container {
                     this.contextBack.globalAlpha = 1;
                 }
                 if (this.yAxisCount === 1) {
-                    if (!this.data.percentage) {
-                        this.contextBack.fillStyle = "#8E8E93";
+                    if (!this.data.stacked) {
+                        this.contextBack.fillStyle = colors[this.theme].axisTextV1;
+                        this.contextBack.globalAlpha = colors[this.theme].axisTextV1Opacity;
                     } else {
-                        this.contextBack.fillStyle = "#252529";
-                        this.contextBack.globalAlpha = 0.5;
+                        this.contextBack.fillStyle = colors[this.theme].axisTextV2Y;
+                        this.contextBack.globalAlpha = colors[this.theme].axisTextV2YOpacity;
                     }
                 } else {
                     this.contextBack.fillStyle = this.data.colors[this.lineNames[yAxis]];
                 }
-                if (this.lineNames.includes(this.data.columns[yAxis+1][0]) || this.yAxisCount == 1) {
+                if (this.lineNames.includes(this.data.columns[yAxis+1][0]) || this.yAxisCount === 1) {
                     let x;
                     if (yAxis % 2 === 0) {
                         this.contextBack.textAlign = 'left';
@@ -93,7 +96,13 @@ export default class Graph extends Container {
             }
         }
         this.contextBack.textAlign = "center";
-        this.contextBack.fillStyle = "#8E8E93";
+        if (!this.data.stacked) {
+            this.contextBack.fillStyle = colors[this.theme].axisTextV1;
+            this.contextBack.globalAlpha = colors[this.theme].axisTextV1Opacity;
+        } else {
+            this.contextBack.fillStyle = colors[this.theme].axisTextV2X;
+            this.contextBack.globalAlpha = colors[this.theme].axisTextV2XOpacity;
+        }
         let prevRight = 0;
         for (let i = 1; i < (this.frame.end - this.frame.start) - 1; i++) {
             let txt = this.dateConvert(this.data.columns[0][this.frame.start + i]);
@@ -107,6 +116,17 @@ export default class Graph extends Container {
         }
     }
 
+    setTextInterval() {
+        let txt = document.getElementById(this.nodeId + "-text-interval");
+        let start = this.data.columns[0][this.frame.start];
+        let end = this.data.columns[0][this.frame.end - 1];
+        if (start !== end) {
+            txt.textContent = this.dateConvert(start, "&d &M &Y") + " - " + this.dateConvert(end, "&d &M &Y");
+        } else {
+            txt.textContent = this.dateConvert(start, "&W, &d &M &Y");
+        }
+    }
+
     initCanvasForeground() {
         this.canvasFore = document.createElement('canvas');
         this.canvasFore.style.left = this.left + "px";
@@ -115,7 +135,6 @@ export default class Graph extends Container {
         this.canvasFore.height = this.height;
         this.canvasFore.style.position = "absolute";
         this.canvasFore.style.zIndex = 15;
-        this.canvasFore.classList.add("noInvertColor");
         document.getElementById(this.nodeId).appendChild(this.canvasFore);
         this.contextFore = this.canvasFore.getContext("2d");
 
@@ -123,7 +142,6 @@ export default class Graph extends Container {
         this.popup.style.display = 'none';
         this.popup.style.zIndex = 20;
         this.popup.classList.add("popup");
-        this.popup.classList.add("noInvertColor");
         document.getElementById(this.nodeId).appendChild(this.popup);
     }
 
@@ -132,10 +150,13 @@ export default class Graph extends Container {
         this.popup.style.display = 'none';
     }
 
-    drawForeground(i, y = 0) {
+    drawForeground(mX, mY = 0) {
+
+        let i = Math.round((mX - (this.left + this.padding)) / this.scaleX)
         this.clearForeground();
 
         if (this.data.types.y0 === 'line' || this.data.types.y0 === 'area') {
+
             this.contextFore.beginPath();
             this.contextFore.lineWidth = "1";
             this.contextFore.strokeStyle = "#182D3B";
@@ -143,35 +164,45 @@ export default class Graph extends Container {
             this.contextFore.moveTo(this.left + this.padding + Math.round(i * this.scaleX), this.top);
             this.contextFore.lineTo(this.left + this.padding + Math.round(i * this.scaleX), this.height);
             this.contextFore.stroke();
-        } else if (this.data.types.y0 === 'bar') {
-            this.contextFore.globalAlpha = 0.5;
-            this.contextFore.fillStyle = "#FFFFFF";
-            this.contextFore.beginPath();
-            const offset = (i) => i - (i % this.append);
-            let l = Math.floor((offset(i) - this.frame.start % this.append) * this.scaleX);
-            console.log(l);
-            console.log(this.frame.start + i - (this.frame.start + i) % this.append);
-            this.contextFore.rect(this.left + this.padding, this.padding, l, this.height - this.padding);
-            this.contextFore.fill();
-            this.contextFore.beginPath();
-            let r = l + Math.floor(this.scaleX * this.append);
-            this.contextFore.rect(this.left + this.padding + r, this.padding, this.width - this.padding - r, this.height - this.padding);
-            this.contextFore.fill();
-            console.log(this.frame.start+i, this.frame.start, this.frame.end)
 
+        } else if (this.data.types.y0 === 'bar') {
+
+            this.contextFore.fillStyle = colors[this.theme].lightenMask;
+            this.contextFore.globalAlpha = colors[this.theme].lightenMaskOpacity;
+            this.contextFore.beginPath();
+
+            let n = 0;
+            while (!!this.barsX[n] && mX > this.barsX[n].x) n++;
+
+            if (!!this.barsX[n-1].x) {
+                let l = this.barsX[n - 1].x - this.left - this.padding;
+                i = this.barsX[n - 1].i - this.frame.start;
+                this.contextFore.rect(this.left + this.padding, this.padding, l, this.height - this.padding);
+                this.contextFore.fill();
+                this.contextFore.beginPath();
+            }
+
+            if (!!this.barsX[n]) {
+                let r = this.barsX[n].x;
+                this.contextFore.rect(r, this.padding, this.width - this.padding - r, this.height - this.padding);
+                this.contextFore.fill();
+            }
         }
+
         this.contextFore.globalAlpha = 1;
-return
+
         const body = document.getElementsByTagName("body");
         const bgColor = !!body[0].style.backgroundColor ? body[0].style.backgroundColor : "#fff";
 
-        let header = this.dateConvertWeek(this.data.columns[0][this.frame.start + i], true);
+        if (this.data.columns[0][this.frame.start + i] === undefined) return;
+        let header = this.dateConvert(this.data.columns[0][this.frame.start + i], '&w, &d &m &Y');
         header = header.replace(/\s/g, "&nbsp;");
-        let html = '<div class="popupData"><div class="popupHeader"><b>' + header + '</b>' + '</div><div class="arrow">&rsaquo;</div>';
+        let html = '<div class="popupData"><div class="popupHeader"><b>' + header + '</b>' + '</div><div class="arrow" style="color:' + colors[this.theme].toolTipArrow + '">&rsaquo;</div>';
         let total = 0; let perc = 0;
         for (let j = 1; j < this.data.columns.length; j++) {
             let name = this.data.columns[j][0];
             if (this.lineNames.includes(name)) {
+
                 if (this.data.types[name] === 'line') {
                     this.contextFore.beginPath();
                     this.contextFore.arc(this.left + this.padding + Math.round(i * this.scaleX), this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.getMin(j-1)) * this.getScaleY(j-1)), 5, 0, 2 * Math.PI, false);
@@ -180,8 +211,14 @@ return
                     this.contextFore.lineWidth = "3";
                     this.contextFore.strokeStyle = this.data.colors[this.data.columns[j][0]];
                     this.contextFore.stroke();
-                    html += "<div class='popupHeader'>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.data.columns[j][this.frame.start + i] + "</b></div>";
+                    html += "<div class='popupHeader'>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.wellLookedSpaces(this.data.columns[j][this.frame.start + i]) + "</b></div>";
                 }
+
+                if (this.data.types[name] === 'bar') {
+                    html += "<div class='popupHeader'>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.wellLookedSpaces(this.data.columns[j][this.frame.start + i]) + "</b></div>";
+                    if (this.data.stacked) total += this.data.columns[j][this.frame.start + i];
+                }
+
                 if (this.data.percentage) {
                     const sum = (k) => {
                         let result = 0;
@@ -191,7 +228,7 @@ return
                         return result
                     };
 
-                    if (this.lineNames[this.lineNames.length] !== name) {
+                    if (this.lineNames[this.lineNames.length - 1] !== name) {
                         perc = Math.round(this.data.columns[j][this.frame.start + i] * 100 / sum(this.frame.start + i));
                         total += perc;
                     } else {
@@ -200,8 +237,10 @@ return
 
                     html += "<div style='text-align: right;padding-right: 5px'><b>" + perc + "%</b></div><div>" + this.data.names[name] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.data.columns[j][this.frame.start + i] + "</b></div>";
                 }
+
             }
         }
+        if (this.data.stacked && !this.data.percentage) html += "<div class='popupHeader'>All</div><div style='text-align:right;'><b>" + this.wellLookedSpaces(total) + "</b></div>";
         html += "</div>"
 
         this.popup.innerHTML = html;
@@ -210,10 +249,10 @@ return
         if (pX < this.left) pX = 0;
         if (pX + this.popup.clientWidth > this.left + this.width) pX = this.left + this.width - this.popup.clientWidth;
         this.popup.style.left = pX + "px";
-        if (y === 0) {
+        if (mY === 0) {
             this.popup.style.top = this.top + 2 * this.padding + "px";
         } else {
-            this.popup.style.top = y - Math.round(this.popup.clientHeight/2) + "px";
+            this.popup.style.top = mY - Math.round(this.popup.clientHeight/2) + "px";
         }
     }
 
@@ -239,20 +278,40 @@ return
         }
     }
 
-    dateConvert(timestamp) {
-        let dt = new Date(timestamp);
-        let months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        let month = months[dt.getMonth()];
-        let date = dt.getDate();
-        return date + " " + month
+    wellLookedSpaces(x) {
+        let res = x.toString();
+        return x < 100000 ? x : res.replace(/(\d)(?=(\d{3})+$)/g, '$1&nbsp;');
     }
 
-    dateConvertWeek(timestamp, displayYear=false) {
+    dateConvert(timestamp, format = '&d &m') {
+
+        let monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        let monthsFull = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        let daysShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        let daysFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
         let dt = new Date(timestamp);
-        let days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        let dayOfWeek = days[dt.getDay()]
+        let res = format;
+
+        let monthShort = monthsShort[dt.getMonth()];
+        res = res.replace('&m', monthShort);
+
+        let monthFull = monthsFull[dt.getMonth()];
+        res = res.replace('&M', monthFull);
+
+        let day = dt.getDate();
+        res = res.replace('&d', day);
+
+        let dayShort = daysShort[dt.getDay()];
+        res = res.replace('&w', dayShort);
+
+        let dayFull = daysFull[dt.getDay()];
+        res = res.replace('&W', dayFull);
+
         let year = dt.getFullYear();
-        return dayOfWeek + ", " + this.dateConvert(timestamp) + (displayYear ? " " + year : "");
+        res = res.replace('&Y', year);
+
+        return res
     }
 
 }

@@ -1,4 +1,5 @@
 import Container from './container.js'
+import { colors } from './colors.js'
 
 export default class Preview extends Container {
 
@@ -171,22 +172,14 @@ export default class Preview extends Container {
         this.contextDraw = this.canvasDraw.getContext("2d");
     }
 
-    drawBackground() {
-/*        this.contextDraw.beginPath();
-        this.contextDraw.lineWidth = "1";
-        this.contextDraw.rect(1, 1, this.width - 1, this.height - 1);
-        this.contextDraw.stroke(); */
-    }
-
     drawFrame(frame) {
         requestAnimationFrame( () => {
             this.contextDraw.clearRect(0, 0, this.width, this.height);
 
-            this.drawBackground();
-            this.contextDraw.globalAlpha = 0.6;
+            this.contextDraw.strokeStyle = colors[this.theme].background;
+            this.contextDraw.fillStyle = colors[this.theme].scrollBackground;
+            this.contextDraw.globalAlpha = colors[this.theme].scrollBackgroundOpacity;
 
-            this.contextDraw.strokeStyle = "#FFFFFF";
-            this.contextDraw.fillStyle = "#E2EEF9";
             this.roundRect(this.contextDraw, 0, 0, Math.round(frame.start * this.scaleX), this.height, {tl:10, bl:10}, true);
             this.roundRect(this.contextDraw, Math.round(frame.end * this.scaleX), 0, this.right - Math.round(frame.end * this.scaleX), this.height, {tr:10, br:10}, true);
 
@@ -202,15 +195,15 @@ export default class Preview extends Container {
                 },
                 right: {
                     top: 0,
-                    left: Math.round(frame.end * this.scaleX) - 10,
+                    left: Math.round(frame.end * this.scaleX),
                     width: 10,
                     height: this.height,
                     value: frame.end
                 }
             }
 
-            this.contextDraw.strokeStyle = "#C0D1E1";
-            this.contextDraw.fillStyle = "#C0D1E1";
+            this.contextDraw.strokeStyle = colors[this.theme].scrollSelector;
+            this.contextDraw.fillStyle = colors[this.theme].scrollSelector;
             this.roundRect(this.contextDraw, this.edges.left.left, this.edges.left.top, this.edges.left.width, this.edges.left.height, {tl:5, bl:5}, true);
             this.roundRect(this.contextDraw, this.edges.right.left, this.edges.right.top, this.edges.right.width, this.edges.right.height, {tr:5, br:5}, true);
 

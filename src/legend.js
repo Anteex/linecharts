@@ -1,3 +1,5 @@
+import { colors } from './colors.js'
+
 export default class Legend {
 
     constructor(nodeIdLegend, data, onToggle) {
@@ -18,6 +20,10 @@ export default class Legend {
         }
     }
 
+    setTheme(theme) {
+        this.theme = theme;
+    }
+
     beforeToggle(key, color) {
         return () => {
             let button = document.getElementById(this.nodeIdLegend + '-' + key);
@@ -28,7 +34,7 @@ export default class Legend {
             }
             if (!!button.style.backgroundColor){
                 if (button.style.backgroundColor !== "rgb(255, 255, 255)") {
-                    button.style.backgroundColor = "#FFFFFF";
+                    button.style.backgroundColor = colors[this.theme].background;
                     button.style.color = color;
                     button.innerText = button.innerText.substring(1);
                 } else {
@@ -37,7 +43,7 @@ export default class Legend {
                     button.innerHTML = '&#10004;' + button.innerHTML;
                 }
             } else {
-                button.style.backgroundColor = "#FFFFFF";
+                button.style.backgroundColor = colors[this.theme].background;
                 button.style.color = color;
                 button.innerText = button.innerText.substring(1);
             }

@@ -17,6 +17,10 @@ export default class Container {
         this.append = 1;
     }
 
+    setTheme(theme) {
+        this.theme = theme;
+    }
+
     initCanvas() {
         this.canvas = document.createElement('canvas');
         this.canvas.style.left = this.left + "px";
@@ -25,7 +29,6 @@ export default class Container {
         this.canvas.height = this.height;
         this.canvas.style.position = "absolute";
         this.canvas.style.zIndex = 10;
-        this.canvas.classList.add("noInvertColor");
         document.getElementById(this.nodeId).appendChild(this.canvas);
         this.context = this.canvas.getContext("2d");
     }
@@ -168,7 +171,6 @@ export default class Container {
             }
             if (redraw) {
                 this.draw(lineNames);
-                this.drawBackground();
             }
         });
     }
@@ -197,11 +199,13 @@ export default class Container {
                     this.append = append;
                     let prevX = 0;
                     const offset = (i) => i - (this.frame.start + (append - this.frame.start % append));
+                    this.barsX = [];
                     for (let i = -1 * offset(0); i < this.frame.end + 2*append; i = i + append) {
                         let x = this.left + this.padding + Math.floor(offset(i) * this.scaleX) - Math.floor(this.frame.start % append * this.scaleX);
                         if (x > prevX && prevX !== 0) x = prevX;
                         base[offset(i)] = base[offset(i)] === undefined ? (this.height - this.padding) : base[offset(i)];
                         let y =  base[offset(i)] - this.data.columns[j][i] * this.getScaleY(j-1);
+                        if (y < this.padding) y = this.padding;
                         let w = Math.floor(this.scaleX * append);
                         if (x < this.left + this.padding) {
                             w = w - (this.left + this.padding - x);
@@ -213,6 +217,7 @@ export default class Container {
                         prevX = x + w;
                         let h = this.data.columns[j][i] * this.getScaleY(j-1);
                         base[offset(i)] = y;
+                        this.barsX.push({i, x});
                         this.context.fillRect(x, y, w, h)
                     }
                     this.context.globalAlpha = 1;
