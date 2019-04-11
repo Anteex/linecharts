@@ -57,7 +57,7 @@ export default class Graph extends Container {
         this.setTextInterval();
         this.contextBack.globalAlpha = 1.0;
         for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
-            let axis = this.axis_numbers(this.getMin(yAxis), this.getMax(yAxis));
+            let axis = !!this.axisScale[yAxis] ? this.axisScale[yAxis] : this.axis_numbers(this.getMin(yAxis), this.getMax(yAxis));
             this.contextBack.beginPath();
             this.contextBack.lineWidth = "1";
             this.contextBack.textAlign = "left";

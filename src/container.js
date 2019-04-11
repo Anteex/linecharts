@@ -15,6 +15,7 @@ export default class Container {
         this.max = [];
         this.min = [];
         this.append = 1;
+        this.axisScale = [];
     }
 
     setTheme(theme) {
@@ -109,9 +110,10 @@ export default class Container {
                     if (!!this.data.percentage) realMax[yAxis] = 100;
                 }
 
+                let axisScale = [];
+
                 if (lineNames.length > 1 && this.yAxisCount > 1) {
 
-                    let axisScale = [];
                     let maxLength = 0;
 
                     for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
@@ -137,7 +139,12 @@ export default class Container {
                         realMin[yAxis] = axisScale[yAxis][0] - step(axisScale[yAxis]);
                         realMax[yAxis] = axisScale[yAxis][maxLength-1] + step(axisScale[yAxis]);
                     }
+
+                } else {
+                    axisScale[0] = this.axis_numbers(realMin[0], realMax[0]);
                 }
+
+                this.axisScale = axisScale;
 
                 for (let yAxis = 0; yAxis < this.yAxisCount; yAxis++) {
                     let delta = Math.round((realMax[yAxis] - realMin[yAxis])/50);
@@ -292,7 +299,7 @@ export default class Container {
     }
 
     axis_numbers(a, b) {
-        const least = 4;
+        const least = 5;
         const maximum = 8;
         const deviders = [10, 5, 2, 1];
 

@@ -172,6 +172,9 @@ export default class Preview extends Container {
         this.contextDraw = this.canvasDraw.getContext("2d");
     }
 
+    drawBackground() {
+    }
+
     drawFrame(frame) {
         requestAnimationFrame( () => {
             this.contextDraw.clearRect(0, 0, this.width, this.height);
