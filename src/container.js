@@ -1,6 +1,6 @@
 export default class Container {
 
-    constructor(position, nodeId, data) {
+    constructor(position, nodeId, data, config) {
         Object.assign(this, position);
         this.padding = 10;
         this.width = this.right - this.left;
@@ -8,6 +8,7 @@ export default class Container {
         this.nodeId = nodeId;
         this.initCanvas();
         this.data = data;
+        this.config = config;
         this.setFrame({
             start: 1,
             end: this.data.columns[0].length
@@ -56,7 +57,7 @@ export default class Container {
 
         requestAnimationFrame( () => {
             let realMax, realMin;
-            if (this.lineNames.length > 0) {
+            if (this.lineNames.length > 0 && !this.pie) {
                 let data = [];
                 if (!!this.data.y_scaled) {
                     this.yAxisCount = this.data.columns.length - 1;
@@ -187,7 +188,7 @@ export default class Container {
         this.context.clearRect(0, 0, this.width, this.height);
         let base = [];
         let newBase = [];
-        for (let j = this.data.columns.length - 1; j >= 0; j--) {
+        for (let j = this.data.columns.length - 1; j > 0; j--) {
             let name = this.data.columns[j][0];
             if (lineNames.includes(name)) {
                 if (this.data.types[name] === 'line') {
@@ -233,44 +234,59 @@ export default class Container {
                     }
                     this.context.globalAlpha = 1;
                 } else if (this.data.types[name] === 'area') {
-                    this.context.fillStyle = this.data.colors[this.data.columns[j][0]];
-                    this.context.beginPath();
-                    let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
-                    this.append = append;
+                    if (!this.pie) {
+                        this.context.fillStyle = this.data.colors[this.data.columns[j][0]];
+                        this.context.beginPath();
+                        let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
+                        this.append = append;
 
-                    const sum = (k) => {
-                        let result = 0;
-                        for (let i = 1; i < this.data.columns.length; i++) {
-                            if (lineNames.includes(this.data.columns[i][0])) result += this.data.columns[i][k]
-                        }
-                        return result
-                    };
+                        const sum = (k) => {
+                            let result = 0;
+                            for (let i = 1; i < this.data.columns.length; i++) {
+                                if (lineNames.includes(this.data.columns[i][0])) result += this.data.columns[i][k]
+                            }
+                            return result
+                        };
 
-                    let i;
-                    for (i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
-                        base[i] = base[i] === undefined ? (this.height - this.padding) : base[i];
-                        newBase[i] = newBase[i] === undefined ? (this.height - this.padding) : newBase[i];
-                        let x = this.left + this.padding + Math.round(i * this.scaleX);
-                        let y;
-                        if (lineNames[0] !== name) {
-                            y = base[i] - (Math.round(this.data.columns[j][this.frame.start + i]*100/sum(this.frame.start + i)) * this.getScaleY(j-1));
-                        } else {
-                            y = this.padding;
+                        let i;
+                        for (i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
+                            base[i] = base[i] === undefined ? (this.height - this.padding) : base[i];
+                            newBase[i] = newBase[i] === undefined ? (this.height - this.padding) : newBase[i];
+                            let x = this.left + this.padding + Math.round(i * this.scaleX);
+                            let y;
+                            if (lineNames[0] !== name) {
+                                y = base[i] - (Math.round(this.data.columns[j][this.frame.start + i] * 100 / sum(this.frame.start + i)) * this.getScaleY(j - 1));
+                            } else {
+                                y = this.padding;
+                            }
+                            newBase[i] = y;
+                            this.context.lineTo(x, y)
                         }
-                        newBase[i] = y;
-                        this.context.lineTo(x, y)
+                        this.context.lineTo(this.left + this.padding + Math.round((i - append) * this.scaleX), base[(i - append)]);
+                        for (let m = i - append; m >= 0; m = m - append) {
+                            let x = this.left + this.padding + Math.round(m * this.scaleX);
+                            let y = Math.ceil(base[m]);
+                            base[m] = newBase[m];
+                            this.context.lineTo(x, y);
+                        }
+                        this.context.closePath();
+                        this.context.fill();
+                    } else {
+                        let value = 0;
+                        for (let i = this.frame.start; i < this.frame.end; i++) {
+                            value += this.data.columns[j][i];
+                        }
+                        base.push({
+                            name: this.data.names[name],
+                            color: this.data.colors[name],
+                            value
+                        })
                     }
-                    this.context.lineTo(this.left + this.padding + Math.round((i-append) * this.scaleX), base[(i-append)]);
-                    for (let m = i - append; m >= 0; m = m - append) {
-                        let x = this.left + this.padding + Math.round(m * this.scaleX);
-                        let y = Math.ceil(base[m]);
-                        base[m] = newBase[m];
-                        this.context.lineTo(x, y);
-                    }
-                    this.context.closePath();
-                    this.context.fill();
                 }
             }
+        }
+        if (!!this.pie) {
+            this.pie.draw(base);
         }
     }
 

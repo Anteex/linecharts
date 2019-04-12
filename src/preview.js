@@ -3,8 +3,8 @@ import { colors } from './colors.js'
 
 export default class Preview extends Container {
 
-    constructor(position, nodeId, data) {
-        super(position, nodeId, data);
+    constructor(position, nodeId, data, config) {
+        super(position, nodeId, data, config);
 
         this.mouseIsDown = false;
 

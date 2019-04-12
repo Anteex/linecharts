@@ -4,11 +4,12 @@ import Legend from './legend.js';
 
 export default class Chart {
 
-    constructor(nodeId, data) {
+    constructor(nodeId, data, config = {}) {
         this.nodeId = nodeId;
         document.getElementById(nodeId).innerHTML = "";
         this.nodeIdLegend = nodeId + '-legend';
         this.data = data;
+        this.config = config;
         this.theme = 'day';
         this.init();
     }
@@ -18,10 +19,10 @@ export default class Chart {
 
         this.initLines();
 
-        this.preview = new Preview(this.previewPosition, this.nodeId, this.data);
+        this.preview = new Preview(this.previewPosition, this.nodeId, this.data, this.config);
         this.preview.setTheme(this.theme);
 
-        this.graph = new Graph(this.graphPosition, this.nodeId, this.data);
+        this.graph = new Graph(this.graphPosition, this.nodeId, this.data, this.config);
         this.graph.setTheme(this.theme);
 
         this.preview.onFrameChange = this.graphSetFrame.bind(this);
@@ -31,8 +32,8 @@ export default class Chart {
         this.legend.setTheme(this.theme);
 
         let initialFrame = {
-            start: Math.round((this.data.columns[0].length - 1) * 0.5),
-            end: Math.round((this.data.columns[0].length - 1) * 0.75)
+            start: !!this.config.start ? this.config.start : Math.round((this.data.columns[0].length - 1) * 0.4),
+            end: !!this.config.end ? this.config.end : Math.round((this.data.columns[0].length - 1) * 0.65)
         };
         this.preview.drawFrame(initialFrame);
 

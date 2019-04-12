@@ -1,22 +1,27 @@
 import Container from './container.js'
+import Pie from './pie.js'
 import { colors } from './colors.js'
 
 export default class Graph extends Container {
 
-    constructor(position, nodeId, data) {
+    constructor(position, nodeId, data, config) {
         position.bottom = position.bottom - 30;
-        super(position, nodeId, data);
+        super(position, nodeId, data, config);
 
         this.initCanvasBackground();
         this.initCanvasForeground();
 
-        this.canvasFore.onmousemove = (e) => {
-            let x = e.x - this.canvasFore.getBoundingClientRect().x;
-            let y = e.y - this.canvasFore.getBoundingClientRect().y;
-            if (Math.round(x / this.scaleX) >= 0 && Math.round(x / this.scaleX) < (this.frame.end - this.frame.start)) {
-                this.drawForeground(x, y)
-            }
-        };
+        if (!this.config.pie) {
+            this.canvasFore.onmousedown = (e) => {
+                let x = e.x - this.canvasFore.getBoundingClientRect().x;
+                let y = e.y - this.canvasFore.getBoundingClientRect().y;
+                if (Math.round(x / this.scaleX) >= 0 && Math.round(x / this.scaleX) < (this.frame.end - this.frame.start)) {
+                    this.drawForeground(x, y)
+                }
+            };
+        } else {
+            this.pie = new Pie(this.canvasFore, this.padding);
+        }
     }
 
     refresh(position) {

@@ -43,7 +43,7 @@ loadJSON("data/4/overview.json")
 loadJSON("data/5/overview.json")
     .then((result) => {
         const percentage_data = JSON.parse(result);
-        charts[4] = new Chart("graph-area-4", percentage_data);
+        charts[4] = new Chart("graph-area-4", percentage_data, {pie: true});
     })
     .catch((error) => {
         console.error("Error loading JSON data: " + error);
