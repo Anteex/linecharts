@@ -1,6 +1,7 @@
 import Preview from './preview.js';
 import Graph from './graph.js';
 import Legend from './legend.js';
+import loadJSON from './loadjson.js';
 
 export default class Chart {
 
@@ -16,14 +17,14 @@ export default class Chart {
 
     init() {
         this.initSizes();
-
         this.initLines();
 
         this.preview = new Preview(this.previewPosition, this.nodeId, this.data, this.config);
         this.preview.setTheme(this.theme);
 
-        this.graph = new Graph(this.graphPosition, this.nodeId, this.data, this.config);
+        this.graph = new Graph(this.graphPosition, this.nodeId, this.data, this.config, this.onPopupClick.bind(this));
         this.graph.setTheme(this.theme);
+        this.graph.drawForeground(0, 0);
 
         this.preview.onFrameChange = this.graphSetFrame.bind(this);
         this.preview.draw(this.lines);
@@ -37,17 +38,60 @@ export default class Chart {
         };
         this.preview.drawFrame(initialFrame);
 
-        this.graph.draw(this.lines, { colors: this.data.colors, names: this.data.names });
-
         window.addEventListener('resize', () => {
             this.refresh();
         });
+    }
+
+    onPopupClick(data) {
+        return () => {
+            if (!!this.config.dataPath) {
+                let dt = new Date(data);
+                let month = dt.getMonth() + 1;
+                month = month.toString().length < 2 ? '0' + month : month;
+                let day = dt.getDate();
+                day = day.toString().length < 2 ? '0' + day : day;
+                let year = dt.getFullYear();
+                loadJSON(this.config.dataPath + year + '-' + month + '/' + day + '.json')
+                    .then((result) => {
+                        const zoom_data = JSON.parse(result);
+                        this.reloadData(zoom_data);
+                    })
+                    .catch((error) => {
+                        console.error("Error loading JSON data: " + error);
+                    })
+            } else {
+                this.graph.animateIn(() => {
+                    this.config.pie = true;
+                    this.reloadData(this.data);
+                });
+            }
+        }
+    }
+
+    clearNode() {
+        let nodeId = document.getElementById(this.nodeId);
+        while (nodeId.firstChild) {
+            nodeId.removeChild(nodeId.firstChild);
+        }
+        nodeId = document.getElementById(this.nodeId + '-legend');
+        while (nodeId.firstChild) {
+            nodeId.removeChild(nodeId.firstChild);
+        }
+    }
+
+    reloadData(data) {
+        this.data = data;
+        this.clearNode();
+        this.config.zoomed = true;
+        this.init();
     }
 
     setTheme(theme) {
         this.theme = theme;
         this.graph.setTheme(theme);
         this.graph.drawBackground();
+        this.graph.drawForeground(0, 0);
         this.preview.setTheme(theme);
         this.preview.drawFrame(this.graph.getFrame());
         this.legend.setTheme(this.theme);

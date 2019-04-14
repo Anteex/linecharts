@@ -1,12 +1,14 @@
 import Container from './container.js'
 import Pie from './pie.js'
 import { colors } from './colors.js'
+import { wellLooked, wellLookedSpaces, dateConvert } from './helper.js'
 
 export default class Graph extends Container {
 
-    constructor(position, nodeId, data, config) {
+    constructor(position, nodeId, data, config, onPopupClick) {
         position.bottom = position.bottom - 30;
         super(position, nodeId, data, config);
+        this.onPopupClick = onPopupClick;
 
         this.initCanvasBackground();
         this.initCanvasForeground();
@@ -20,7 +22,7 @@ export default class Graph extends Container {
                 }
             };
         } else {
-            this.pie = new Pie(this.canvasFore, this.padding);
+            this.pie = new Pie(this.nodeId, this.canvasFore, this.padding, this.data.columns.length - 1);
         }
     }
 
@@ -97,7 +99,7 @@ export default class Graph extends Container {
                         this.contextBack.textAlign = 'right';
                         x = this.right - this.padding - ((yAxis - 1) * 5 * this.padding);
                     }
-                    this.contextBack.fillText(this.wellLooked(axis[i]), x, this.height - 2 * this.padding - (Math.round(axis[i] - this.getMin(yAxis)) * this.getScaleY(yAxis)));
+                    this.contextBack.fillText(wellLooked(axis[i]), x, this.height - 2 * this.padding - (Math.round(axis[i] - this.getMin(yAxis)) * this.getScaleY(yAxis)));
                 }
             }
         }
@@ -111,7 +113,7 @@ export default class Graph extends Container {
         }
         let prevRight = 0;
         for (let i = 1; i < (this.frame.end - this.frame.start) - 1; i++) {
-            let txt = this.dateConvert(this.data.columns[0][this.frame.start + i]);
+            let txt = dateConvert(this.data.columns[0][this.frame.start + i]);
             let x = this.left + this.padding + Math.round(i * this.scaleX);
             let w = this.contextBack.measureText(txt).width;
             if (prevRight + 2 * this.padding < (x - Math.round(w / 2))
@@ -127,9 +129,9 @@ export default class Graph extends Container {
         let start = this.data.columns[0][this.frame.start];
         let end = this.data.columns[0][this.frame.end - 1];
         if (start !== end) {
-            txt.textContent = this.dateConvert(start, "&d &M &Y") + " - " + this.dateConvert(end, "&d &M &Y");
+            txt.textContent = dateConvert(start, "&d &M &Y") + " - " + dateConvert(end, "&d &M &Y");
         } else {
-            txt.textContent = this.dateConvert(start, "&W, &d &M &Y");
+            txt.textContent = dateConvert(start, "&W, &d &M &Y");
         }
     }
 
@@ -148,6 +150,7 @@ export default class Graph extends Container {
         this.popup.style.display = 'none';
         this.popup.style.zIndex = 20;
         this.popup.classList.add("popup");
+        this.popup.setAttribute("id", this.nodeId + "-popup");
         document.getElementById(this.nodeId).appendChild(this.popup);
     }
 
@@ -156,7 +159,12 @@ export default class Graph extends Container {
         this.popup.style.display = 'none';
     }
 
-    drawForeground(mX, mY = 0) {
+    drawForeground(mX = 0, mY = 0) {
+
+        this.popup.style.backgroundColor = colors[this.theme].tooltipBackground;
+        this.popup.style.borderColor = colors[this.theme].tooltipBorder;
+
+        if (mX === 0 ) return;
 
         let i = Math.round((mX - (this.left + this.padding)) / this.scaleX)
         this.clearForeground();
@@ -201,9 +209,14 @@ export default class Graph extends Container {
         const bgColor = !!body[0].style.backgroundColor ? body[0].style.backgroundColor : "#fff";
 
         if (this.data.columns[0][this.frame.start + i] === undefined) return;
-        let header = this.dateConvert(this.data.columns[0][this.frame.start + i], '&w, &d &m &Y');
+        let header = dateConvert(this.data.columns[0][this.frame.start + i], '&w, &d &m &Y');
         header = header.replace(/\s/g, "&nbsp;");
-        let html = '<div class="popupData"><div class="popupHeader"><b>' + header + '</b>' + '</div><div class="arrow" style="color:' + colors[this.theme].toolTipArrow + '">&rsaquo;</div>';
+        let html = '<div class="popupData"><div class="popupHeader"><b>' + header + '</b>' + '</div>';
+        if (!this.config.zoomed) {
+            html += '<div class="arrow" style="color:' + colors[this.theme].toolTipArrow + '">&rsaquo;</div>';
+        } else {
+            html += '<div></div>';
+        }
         let total = 0; let perc = 0;
         for (let j = 1; j < this.data.columns.length; j++) {
             let name = this.data.columns[j][0];
@@ -217,11 +230,11 @@ export default class Graph extends Container {
                     this.contextFore.lineWidth = "3";
                     this.contextFore.strokeStyle = this.data.colors[this.data.columns[j][0]];
                     this.contextFore.stroke();
-                    html += "<div class='popupHeader'>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.wellLookedSpaces(this.data.columns[j][this.frame.start + i]) + "</b></div>";
+                    html += "<div class='popupHeader'>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + wellLookedSpaces(this.data.columns[j][this.frame.start + i]) + "</b></div>";
                 }
 
                 if (this.data.types[name] === 'bar') {
-                    html += "<div class='popupHeader'>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + this.wellLookedSpaces(this.data.columns[j][this.frame.start + i]) + "</b></div>";
+                    html += "<div class='popupHeader'>" + this.data.names[this.data.columns[j][0]] + "</div>" + "<div style='color: " + this.data.colors[this.data.columns[j][0]] + "; text-align:right;'><b>" + wellLookedSpaces(this.data.columns[j][this.frame.start + i]) + "</b></div>";
                     if (this.data.stacked) total += this.data.columns[j][this.frame.start + i];
                 }
 
@@ -246,13 +259,12 @@ export default class Graph extends Container {
 
             }
         }
-        if (this.data.stacked && !this.data.percentage) html += "<div class='popupHeader'>All</div><div style='text-align:right;'><b>" + this.wellLookedSpaces(total) + "</b></div>";
+        if (this.data.stacked && !this.data.percentage) html += "<div class='popupHeader'>All</div><div style='text-align:right;'><b>" + wellLookedSpaces(total) + "</b></div>";
         html += "</div>"
 
         this.popup.innerHTML = html;
-        this.popup.style.backgroundColor = colors[this.theme].tooltipBackground;
-        this.popup.style.borderColor = colors[this.theme].tooltipBorder;
         this.popup.style.display = 'block';
+        if (!this.config.zoomed) this.popup.onclick = this.onPopupClick(this.data.columns[0][this.frame.start + i]);
         let pX = this.left + Math.round(i * this.scaleX / 2);
         if (pX < this.left) pX = 0;
         if (pX + this.popup.clientWidth > this.left + this.width) pX = this.left + this.width - this.popup.clientWidth;
@@ -270,60 +282,6 @@ export default class Graph extends Container {
 
     getFrame () {
         return this.frame;
-    }
-
-    wellLooked(x) {
-        if (x > 999 && x < 1000000) {
-            if (Math.round(x / 100) !== Math.round(x / 1000) * 10) {
-                return (x / 1000).toFixed(1) + 'K'
-            } else {
-                return Math.round(x / 1000) + 'K'
-            }
-        } else if (x > 999999) {
-            if (Math.round(x / 100000) !== Math.round(x / 1000000) * 10) {
-                return (x / 1000000).toFixed(1) + 'M'
-            } else {
-                return Math.round(x / 1000000) + 'M'
-            }
-        } else {
-            return x;
-        }
-    }
-
-    wellLookedSpaces(x) {
-        let res = x.toString();
-        return x < 100000 ? x : res.replace(/(\d)(?=(\d{3})+$)/g, '$1&nbsp;');
-    }
-
-    dateConvert(timestamp, format = '&d &m') {
-
-        let monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        let monthsFull = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        let daysShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        let daysFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-        let dt = new Date(timestamp);
-        let res = format;
-
-        let monthShort = monthsShort[dt.getMonth()];
-        res = res.replace('&m', monthShort);
-
-        let monthFull = monthsFull[dt.getMonth()];
-        res = res.replace('&M', monthFull);
-
-        let day = dt.getDate();
-        res = res.replace('&d', day);
-
-        let dayShort = daysShort[dt.getDay()];
-        res = res.replace('&w', dayShort);
-
-        let dayFull = daysFull[dt.getDay()];
-        res = res.replace('&W', dayFull);
-
-        let year = dt.getFullYear();
-        res = res.replace('&Y', year);
-
-        return res
     }
 
 }

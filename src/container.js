@@ -17,6 +17,7 @@ export default class Container {
         this.min = [];
         this.append = 1;
         this.axisScale = [];
+        this.animate = {};
     }
 
     setTheme(theme) {
@@ -54,7 +55,6 @@ export default class Container {
     draw(lineNames) {
         this.lineNames = lineNames;
         this.scaleY = [];
-
         requestAnimationFrame( () => {
             let realMax, realMin;
             if (this.lineNames.length > 0 && !this.pie) {
@@ -188,6 +188,8 @@ export default class Container {
         this.context.clearRect(0, 0, this.width, this.height);
         let base = [];
         let newBase = [];
+        this.animate.area = [];
+        this.animate.area.colors = [];
         for (let j = this.data.columns.length - 1; j > 0; j--) {
             let name = this.data.columns[j][0];
             if (lineNames.includes(name)) {
@@ -249,6 +251,8 @@ export default class Container {
                         };
 
                         let i;
+                        this.animate.area[j-1] = [];
+                        this.animate.area.colors[j-1] = this.data.colors[this.data.columns[j][0]];
                         for (i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
                             base[i] = base[i] === undefined ? (this.height - this.padding) : base[i];
                             newBase[i] = newBase[i] === undefined ? (this.height - this.padding) : newBase[i];
@@ -261,6 +265,7 @@ export default class Container {
                             }
                             newBase[i] = y;
                             this.context.lineTo(x, y)
+                            this.animate.area[j-1].push({x, y});
                         }
                         this.context.lineTo(this.left + this.padding + Math.round((i - append) * this.scaleX), base[(i - append)]);
                         for (let m = i - append; m >= 0; m = m - append) {
@@ -268,25 +273,25 @@ export default class Container {
                             let y = Math.ceil(base[m]);
                             base[m] = newBase[m];
                             this.context.lineTo(x, y);
+                            this.animate.area[j-1].push({x, y});
                         }
                         this.context.closePath();
                         this.context.fill();
+                        this.animate.area.steps = 50;
                     } else {
-                        let value = 0;
+                        base[j-1] = {};
+                        base[j-1].name = this.data.names[name];
+                        base[j-1].color = this.data.colors[name];
+                        base[j-1].value = 0;
                         for (let i = this.frame.start; i < this.frame.end; i++) {
-                            value += this.data.columns[j][i];
+                            base[j-1].value += this.data.columns[j][i];
                         }
-                        base.push({
-                            name: this.data.names[name],
-                            color: this.data.colors[name],
-                            value
-                        })
                     }
                 }
             }
         }
         if (!!this.pie) {
-            this.pie.draw(base);
+            this.pie.draw(base, () => this.draw(lineNames));
         }
     }
 
@@ -357,6 +362,39 @@ export default class Container {
         }
 
         return result;
+    }
+
+    animateIn(afterEnd) {
+        let centerX = Math.round(this.width / 2);
+        let centerY = Math.round(this.height / 2);
+        this.popup.style.display = 'none';
+        requestAnimationFrame(() => {
+            console.log('frame');
+            this.context.clearRect(0, 0, this.width, this.height);
+            for (let j=0; j < this.animate.area.length; j++) {
+                this.context.fillStyle = this.animate.area.colors[j];
+                this.context.beginPath();
+                for (let i=0; i < this.animate.area[j].length; i++) {
+                    let rad = Math.atan2(this.animate.area[j][i].y - centerY, this.animate.area[j][i].x - centerX);
+                    rad = rad < 0 ? 2 * Math.PI - rad : rad;
+                    let R = Math.sqrt(Math.pow(Math.abs(this.animate.area[j][i].y - centerY), 2) + Math.pow(Math.abs(this.animate.area[j][i].x - centerX), 2));
+                    rad = rad - rad / 20;
+                    R = R - R / 20;
+                    let x = centerX + R * Math.cos(rad);
+                    let y = centerY + R * Math.sin(rad);
+                    this.context.lineTo(x, y);
+                    this.animate.area[j][i] = { x, y };
+                }
+                this.context.closePath();
+                this.context.fill();
+            }
+            this.animate.area.steps -= 1;
+            if (this.animate.area.steps > 0) {
+                this.animateIn()
+            } else {
+                efterEnd();
+            }
+        })
     }
 
 }
