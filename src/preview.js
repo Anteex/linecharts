@@ -40,7 +40,7 @@ export default class Preview extends Container {
             let x = getMouseX(e);
             let y = getMouseY(e);
 
-            if ( x > this.edges.left.left
+            if ( x > this.edges.left.left - 4*this.edges.left.width
                 && x < this.edges.left.left + this.edges.left.width
                 && y > this.edges.left.top
                 && y < this.edges.left.top + this.edges.left.height) {
@@ -48,7 +48,7 @@ export default class Preview extends Container {
             }
 
             if ( x > this.edges.right.left
-                && x < this.edges.right.left + this.edges.right.width
+                && x < this.edges.right.left + 5*this.edges.right.width
                 && y > this.edges.right.top
                 && y < this.edges.right.top + this.edges.right.height) {
                 this.dragRightEdge = true;

@@ -21,6 +21,7 @@ h2 {
 
 .zoomout {
     color: #108BE3;
+    cursor: pointer;
 }
 
 .helper {

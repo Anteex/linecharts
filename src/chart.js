@@ -104,6 +104,9 @@ export default class Chart {
         } else {
             this.config.targetFrame = undefined;
         }
+        if (!!this.config.initLines) {
+            this.lines = this.config.lines;
+        }
         this.data = this.config.data;
         this.config.zoomed = undefined;
         this.config.pie = undefined;
@@ -186,7 +189,7 @@ export default class Chart {
     }
 
     initLines() {
-        if (!!this.config.lines) {
+        if (!!this.config.lines && !this.config.initLines) {
             this.lines = this.config.lines;
         } else {
             this.lines = [];

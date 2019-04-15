@@ -34,7 +34,7 @@ loadJSON("data/3/overview.json")
 loadJSON("data/4/overview.json")
     .then((result) => {
         const one_bar_data = JSON.parse(result);
-        charts[3] = new Chart("graph-area-3", one_bar_data, { dataPath: "data/4/"});
+        charts[3] = new Chart("graph-area-3", one_bar_data, { dataPath: "data/4/", initLines: true});
     })
     .catch((error) => {
         console.error("Error loading JSON data: " + error);
