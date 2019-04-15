@@ -112,8 +112,9 @@ export default class Graph extends Container {
             this.contextBack.globalAlpha = colors[this.theme].axisTextV2XOpacity;
         }
         let prevRight = 0;
+        let format = dateConvert(this.data.columns[0][this.frame.start + 1]) === dateConvert(this.data.columns[0][this.frame.end - 2]) ? '&h:&i' : '&d &m';
         for (let i = 1; i < (this.frame.end - this.frame.start) - 1; i++) {
-            let txt = dateConvert(this.data.columns[0][this.frame.start + i]);
+            let txt = dateConvert(this.data.columns[0][this.frame.start + i], format);
             let x = this.left + this.padding + Math.round(i * this.scaleX);
             let w = this.contextBack.measureText(txt).width;
             if (prevRight + 2 * this.padding < (x - Math.round(w / 2))
@@ -126,8 +127,8 @@ export default class Graph extends Container {
 
     setTextInterval() {
         let txt = document.getElementById(this.nodeId + "-text-interval");
-        let start = this.data.columns[0][this.frame.start];
-        let end = this.data.columns[0][this.frame.end - 1];
+        let start = dateConvert(this.data.columns[0][this.frame.start], "&d &M &Y");
+        let end = dateConvert(this.data.columns[0][this.frame.end - 1], "&d &M &Y");
         if (start !== end) {
             txt.textContent = dateConvert(start, "&d &M &Y") + " - " + dateConvert(end, "&d &M &Y");
         } else {

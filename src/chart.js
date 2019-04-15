@@ -2,6 +2,7 @@ import Preview from './preview.js';
 import Graph from './graph.js';
 import Legend from './legend.js';
 import loadJSON from './loadjson.js';
+import { dayBeginStamp, dayEndStamp } from './helper.js'
 
 export default class Chart {
 
@@ -19,6 +20,20 @@ export default class Chart {
         this.initSizes();
         this.initLines();
 
+        if (!!this.config.zoomed) {
+            let headText = document.getElementById(this.nodeId + '-header');
+            this.config.headText = headText.innerHTML;
+            headText.innerHTML = '<span class="helper"></span><span><img src="zoomout.png"/>&nbsp;Zoom Out</a>';
+            headText.onclick = this.zoomOut.bind(this);
+            headText.classList.add('zoomout');
+        } else if (!!this.config.headText) {
+            let headText = document.getElementById(this.nodeId + '-header');
+            headText.innerHTML = this.config.headText;
+            headText.onclick = undefined;
+            headText.classList.remove('zoomout');
+        }
+
+
         this.preview = new Preview(this.previewPosition, this.nodeId, this.data, this.config);
         this.preview.setTheme(this.theme);
 
@@ -29,13 +44,22 @@ export default class Chart {
         this.preview.onFrameChange = this.graphSetFrame.bind(this);
         this.preview.draw(this.lines);
 
-        this.legend = new Legend(this.nodeIdLegend, {names: this.data.names, colors: this.data.colors}, this.linesToggle.bind(this));
+        this.legend = new Legend(this.nodeIdLegend, this.data, this.linesToggle.bind(this), this.lines, this.theme);
         this.legend.setTheme(this.theme);
 
-        let initialFrame = {
-            start: !!this.config.start ? this.config.start : Math.round((this.data.columns[0].length - 1) * 0.4),
-            end: !!this.config.end ? this.config.end : Math.round((this.data.columns[0].length - 1) * 0.65)
-        };
+        let initialFrame;
+        if (!!this.config.initialFrame) {
+            initialFrame = {
+                start: Math.ceil((this.data.columns[0].length - 1) * this.config.initialFrame.start),
+                end: Math.floor((this.data.columns[0].length - 1) * this.config.initialFrame.end)
+            }
+        } else {
+            initialFrame = {
+                start: Math.round((this.data.columns[0].length - 1) * 0.4),
+                end: Math.round((this.data.columns[0].length - 1) * 0.65)
+            }
+        }
+
         this.preview.drawFrame(initialFrame);
 
         window.addEventListener('resize', () => {
@@ -55,7 +79,7 @@ export default class Chart {
                 loadJSON(this.config.dataPath + year + '-' + month + '/' + day + '.json')
                     .then((result) => {
                         const zoom_data = JSON.parse(result);
-                        this.reloadData(zoom_data);
+                        this.zoomIn(zoom_data, data);
                     })
                     .catch((error) => {
                         console.error("Error loading JSON data: " + error);
@@ -63,10 +87,65 @@ export default class Chart {
             } else {
                 this.graph.animateIn(() => {
                     this.config.pie = true;
-                    this.reloadData(this.data);
+                    this.zoomIn(this.data);
                 });
             }
         }
+    }
+
+    zoomOut() {
+        this.config.initialFrame = {
+            start: this.graph.getFrame().start / this.data.columns[0].length,
+            end: this.graph.getFrame().end / this.data.columns[0].length
+        };
+        if (!this.config.pie) {
+            this.config.targetFrame = this.config.frame;
+            this.config.frame = undefined;
+        } else {
+            this.config.targetFrame = undefined;
+        }
+        this.data = this.config.data;
+        this.config.zoomed = undefined;
+        this.config.pie = undefined;
+        this.clearNode();
+        this.init();
+        this.config.frame = undefined;
+        this.config.lines = undefined;
+    }
+
+    zoomIn(data, day) {
+        this.config.initialFrame = {
+            start: this.graph.getFrame().start / this.data.columns[0].length,
+            end: this.graph.getFrame().end / this.data.columns[0].length
+        };
+        this.config.frame = this.graph.getFrame();
+        this.config.data = this.data;
+        this.config.lines = this.lines;
+        this.data = data;
+        if (!this.config.pie) {
+            let dayBegin = dayBeginStamp(day);
+            let dayEnd = dayEndStamp(day);
+            let start = 1;
+            let end = data.columns[0].length - 1;
+            for (let i = 1; i < data.columns[0].length-1; i++) {
+                if (data.columns[0][i] < dayBegin) {
+                    start = i + 1;
+                }
+                if (data.columns[0][i - 1] < dayEnd ) {
+                    end = i - 1;
+                }
+            }
+            this.config.targetFrame = { start, end };
+            console.log(this.config.targetFrame);
+            console.log(data.columns[0][this.config.targetFrame.start], data.columns[0][this.config.targetFrame.end])
+            console.log(data.columns[1][this.config.targetFrame.start], data.columns[1][this.config.targetFrame.end])
+
+        } else {
+            this.config.targetFrame = undefined;
+        }
+        this.clearNode();
+        this.config.zoomed = true;
+        this.init();
     }
 
     clearNode() {
@@ -78,13 +157,6 @@ export default class Chart {
         while (nodeId.firstChild) {
             nodeId.removeChild(nodeId.firstChild);
         }
-    }
-
-    reloadData(data) {
-        this.data = data;
-        this.clearNode();
-        this.config.zoomed = true;
-        this.init();
     }
 
     setTheme(theme) {
@@ -118,8 +190,12 @@ export default class Chart {
     }
 
     initLines() {
-        this.lines = [];
-        for (let i = 1; i < this.data.columns.length; i++) this.lines.push(this.data.columns[i][0])
+        if (!!this.config.lines) {
+            this.lines = this.config.lines;
+        } else {
+            this.lines = [];
+            for (let i = 1; i < this.data.columns.length; i++) this.lines.push(this.data.columns[i][0])
+        }
     }
 
     graphSetFrame(frame) {

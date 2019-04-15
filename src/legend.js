@@ -2,20 +2,33 @@ import { colors } from './colors.js'
 
 export default class Legend {
 
-    constructor(nodeIdLegend, data, onToggle) {
+    constructor(nodeIdLegend, data, onToggle, lineNames, theme) {
         this.nodeIdLegend = nodeIdLegend;
         this.onToggle = onToggle;
         this.data = data;
+        this.theme = theme;
         let styleEl = document.createElement('style');
         document.head.appendChild(styleEl);
         let styleSheet = styleEl.sheet;
+        let k=0;
         for (let key in data.names) {
+            k+=1;
+            let chk = lineNames.includes(this.data.columns[k][0]);
             let name = document.createElement('span');
             name.id = nodeIdLegend + '-' + key;
             name.classList.add('legendItem');
-            name.innerHTML ='&#10004;&nbsp' + data.names[key];
+            let bkcolor;
+            if (chk) {
+                name.innerHTML = '&#10004;&nbsp' + data.names[key];
+                bkcolor = data.colors[key];
+            } else {
+                name.innerHTML = '&nbsp' + data.names[key];
+                bkcolor = colors[this.theme].background;
+                name.style.color = data.colors[key];
+                name.style.backgroundColor = colors[this.theme].background;
+            }
             document.getElementById(this.nodeIdLegend).appendChild(name);
-            styleSheet.insertRule('#' + nodeIdLegend + '-' + key + ' { background-color: ' + data.colors[key] + '}')
+            styleSheet.insertRule('#' + nodeIdLegend + '-' + key + ' { background-color: ' + bkcolor + '}')
             styleSheet.insertRule('#' + nodeIdLegend + '-' + key + ' { border-color: ' + data.colors[key] + '}')
             document.querySelector('#' + nodeIdLegend + '-' + key).onclick=this.beforeToggle(key, data.colors[key]).bind(this);
         }

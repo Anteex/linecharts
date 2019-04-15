@@ -31,6 +31,11 @@ export function dateConvert(timestamp, format = '&d &m') {
     let dt = new Date(timestamp);
     let res = format;
 
+    let o = dt.getMonth() + 1;
+    o = o.toString();
+    o = o.length < 2 ? '0' + o : o;
+    res = res.replace('&O', o);
+
     let monthShort = monthsShort[dt.getMonth()];
     res = res.replace('&m', monthShort);
 
@@ -39,6 +44,10 @@ export function dateConvert(timestamp, format = '&d &m') {
 
     let day = dt.getDate();
     res = res.replace('&d', day);
+
+    day = day.toString();
+    day = day.length < 2 ? '0' + day : day;
+    res = res.replace('&D', day);
 
     let dayShort = daysShort[dt.getDay()];
     res = res.replace('&w', dayShort);
@@ -49,5 +58,22 @@ export function dateConvert(timestamp, format = '&d &m') {
     let year = dt.getFullYear();
     res = res.replace('&Y', year);
 
+    let minute = dt.getMinutes().toString();
+    minute = minute.length < 2 ? '0' + minute : minute;
+    res = res.replace('&i', minute);
+
+    let hour = dt.getHours();
+    res = res.replace('&h', hour)
+
     return res
+}
+
+export function dayBeginStamp(date) {
+    let dt = new Date(dateConvert(date, '&Y-&O-&DT00:00:00'));
+    return dt.getTime() - dt.getTimezoneOffset() * 60 * 1000;
+}
+
+export function dayEndStamp(date) {
+    let dt = new Date(dateConvert(date, '&Y-&O-&DT23:59:59'));
+    return dt.getTime() - dt.getTimezoneOffset() * 60 * 1000;
 }

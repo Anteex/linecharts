@@ -233,6 +233,22 @@ export default class Preview extends Container {
 
             this.contextDraw.lineWidth = 1;
 
+            if (!!this.config.targetFrame) {
+                if (this.config.targetFrame.start > frame.start) {
+                    frame.start = Math.ceil((this.config.targetFrame.start + frame.start)/2);
+                } else if (this.config.targetFrame.start < frame.start) {
+                    frame.start = Math.floor((frame.start + this.config.targetFrame.start)/2);
+                }
+                if (this.config.targetFrame.end > frame.end) {
+                    frame.end = Math.ceil((this.config.targetFrame.end + frame.end)/2);
+                } else if (this.config.targetFrame.end < frame.end) {
+                    frame.end = Math.floor((frame.end + this.config.targetFrame.end)/2);
+                }
+                if (this.config.targetFrame.start === frame.start && this.config.targetFrame.end == frame.end) {
+                    this.config.targetFrame = undefined;
+                }
+                this.drawFrame(frame);
+            }
         });
 
         this.onFrameChange(frame);

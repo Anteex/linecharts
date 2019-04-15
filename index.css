@@ -8,7 +8,7 @@ h1 {
 }
 
 h2 {
-    font-size: 0.75em;
+    font-size: 0.7em;
 }
 
 .container {
@@ -16,6 +16,23 @@ h2 {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    padding: 0px 5px;
+}
+
+.zoomout {
+    color: #108BE3;
+}
+
+.helper {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.zoomout img {
+    vertical-align: middle;
+    max-height: 20px;
+    max-width: 20px;
 }
 
 .graph-area {

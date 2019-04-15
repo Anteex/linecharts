@@ -277,7 +277,7 @@ export default class Container {
                         }
                         this.context.closePath();
                         this.context.fill();
-                        this.animate.area.steps = 50;
+                        this.animate.area.steps = 30;
                     } else {
                         base[j-1] = {};
                         base[j-1].name = this.data.names[name];
@@ -369,30 +369,30 @@ export default class Container {
         let centerY = Math.round(this.height / 2);
         this.popup.style.display = 'none';
         requestAnimationFrame(() => {
-            console.log('frame');
             this.context.clearRect(0, 0, this.width, this.height);
             for (let j=0; j < this.animate.area.length; j++) {
                 this.context.fillStyle = this.animate.area.colors[j];
                 this.context.beginPath();
-                for (let i=0; i < this.animate.area[j].length; i++) {
-                    let rad = Math.atan2(this.animate.area[j][i].y - centerY, this.animate.area[j][i].x - centerX);
-                    rad = rad < 0 ? 2 * Math.PI - rad : rad;
-                    let R = Math.sqrt(Math.pow(Math.abs(this.animate.area[j][i].y - centerY), 2) + Math.pow(Math.abs(this.animate.area[j][i].x - centerX), 2));
-                    rad = rad - rad / 20;
-                    R = R - R / 20;
-                    let x = centerX + R * Math.cos(rad);
-                    let y = centerY + R * Math.sin(rad);
-                    this.context.lineTo(x, y);
-                    this.animate.area[j][i] = { x, y };
-                }
+                if (!!this.animate.area[j])
+                    for (let i=0; i < this.animate.area[j].length; i++) {
+                        let rad = Math.atan2(this.animate.area[j][i].y - centerY, this.animate.area[j][i].x - centerX);
+                        rad = rad < 0 ? (2 * Math.PI - rad) : rad;
+                        let R = Math.sqrt(Math.pow(Math.abs(this.animate.area[j][i].y - centerY), 2) + Math.pow(Math.abs(this.animate.area[j][i].x - centerX), 2));
+                        rad = rad + rad / 2 * Math.PI;
+                        R = R - R / 5;
+                        let x = centerX + R * Math.cos(rad);
+                        let y = centerY + R * Math.sin(rad);
+                        this.context.lineTo(x, y);
+                        this.animate.area[j][i] = { x, y };
+                    }
                 this.context.closePath();
                 this.context.fill();
             }
             this.animate.area.steps -= 1;
             if (this.animate.area.steps > 0) {
-                this.animateIn()
+                this.animateIn(afterEnd)
             } else {
-                efterEnd();
+                afterEnd();
             }
         })
     }
