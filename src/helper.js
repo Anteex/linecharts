@@ -28,7 +28,10 @@ export function dateConvert(timestamp, format = '&d &m') {
     let daysShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     let daysFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    let dt = new Date(timestamp);
+    let tzdate = new Date(timestamp);
+    let offset = tzdate.getTimezoneOffset() * 60 * 1000;
+    let dt = new Date(tzdate.getTime() + offset);
+
     let res = format;
 
     let o = dt.getMonth() + 1;
@@ -64,6 +67,10 @@ export function dateConvert(timestamp, format = '&d &m') {
 
     let hour = dt.getHours();
     res = res.replace('&h', hour)
+
+    hour = hour.toString();
+    hour = hour.length < 2 ? '0' + hour : hour;
+    res = res.replace('&H', hour);
 
     return res
 }

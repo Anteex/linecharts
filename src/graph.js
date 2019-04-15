@@ -17,7 +17,7 @@ export default class Graph extends Container {
             this.canvasFore.onmousedown = (e) => {
                 let x = e.x - this.canvasFore.getBoundingClientRect().x;
                 let y = e.y - this.canvasFore.getBoundingClientRect().y;
-                if (Math.round(x / this.scaleX) >= 0 && Math.round(x / this.scaleX) < (this.frame.end - this.frame.start)) {
+                if (Math.round(x / this.scaleX) >= 0 && Math.round(x / this.scaleX) <= (this.frame.end - this.frame.start)) {
                     this.drawForeground(x, y)
                 }
             };
@@ -112,8 +112,8 @@ export default class Graph extends Container {
             this.contextBack.globalAlpha = colors[this.theme].axisTextV2XOpacity;
         }
         let prevRight = 0;
-        let format = dateConvert(this.data.columns[0][this.frame.start + 1]) === dateConvert(this.data.columns[0][this.frame.end - 2]) ? '&h:&i' : '&d &m';
-        for (let i = 1; i < (this.frame.end - this.frame.start) - 1; i++) {
+        let format = dateConvert(this.data.columns[0][this.frame.start + 1]) === dateConvert(this.data.columns[0][this.frame.end - 2]) ? '&H:&i' : '&d &m';
+        for (let i = 1; i <= (this.frame.end - this.frame.start); i++) {
             let txt = dateConvert(this.data.columns[0][this.frame.start + i], format);
             let x = this.left + this.padding + Math.round(i * this.scaleX);
             let w = this.contextBack.measureText(txt).width;
@@ -128,11 +128,11 @@ export default class Graph extends Container {
     setTextInterval() {
         let txt = document.getElementById(this.nodeId + "-text-interval");
         let start = dateConvert(this.data.columns[0][this.frame.start], "&d &M &Y");
-        let end = dateConvert(this.data.columns[0][this.frame.end - 1], "&d &M &Y");
+        let end = dateConvert(this.data.columns[0][this.frame.end-1], "&d &M &Y");
         if (start !== end) {
-            txt.textContent = dateConvert(start, "&d &M &Y") + " - " + dateConvert(end, "&d &M &Y");
+            txt.textContent = dateConvert(this.data.columns[0][this.frame.start], "&d &M &Y") + " - " + dateConvert(this.data.columns[0][this.frame.end-1], "&d &M &Y");
         } else {
-            txt.textContent = dateConvert(start, "&W, &d &M &Y");
+            txt.textContent = dateConvert(this.data.columns[0][this.frame.start], "&W, &d &M &Y") + ',';
         }
     }
 

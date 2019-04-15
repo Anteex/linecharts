@@ -44,12 +44,12 @@ export default class Container {
         this.height = this.bottom - this.top;
         this.canvas.width  = this.width;
         this.canvas.height = this.height;
-        this.scaleX = (this.width - 2 * this.padding) / (this.frame.end - this.frame.start - 1);
+        this.scaleX = (this.width - 2 * this.padding) / (this.frame.end - this.frame.start);
     }
 
     setFrame(frame) {
         this.frame = frame;
-        this.scaleX = (this.width - 2 * this.padding) / (this.frame.end - this.frame.start - 1);
+        this.scaleX = (this.width - 2 * this.padding) / (this.frame.end - this.frame.start);
     }
 
     draw(lineNames) {
@@ -68,7 +68,7 @@ export default class Container {
                     this.yAxisCount = 1;
                     let sum;
                     data[0] = [];
-                    for (let j = this.frame.start; j < this.frame.end; j++) {
+                    for (let j = this.frame.start; j <= this.frame.end; j++) {
                         sum = 0;
                         for (let i = 1; i < this.data.columns.length; i++) {
                             let name = this.data.columns[i][0];
@@ -199,7 +199,7 @@ export default class Container {
                     this.context.strokeStyle = this.data.colors[this.data.columns[j][0]];
                     let append = Math.ceil((this.frame.end - this.frame.start) / this.width);
                     this.append = append;
-                    for (let i = 0; i < (this.frame.end - this.frame.start); i = i + append) {
+                    for (let i = 0; i <= (this.frame.end - this.frame.start); i = i + append) {
                         this.context.lineTo(this.left + this.padding + Math.round(i * this.scaleX),  this.height - this.padding - (Math.round(this.data.columns[j][this.frame.start + i] - this.getMin(j-1)) * this.getScaleY(j-1)))
                     }
                     this.context.stroke();
@@ -209,7 +209,7 @@ export default class Container {
                     let append = Math.ceil(15 * (this.frame.end - this.frame.start) / this.width);
                     this.append = append;
                     let prevX = 0;
-                    const offset = (i) => i - (this.frame.start + (append - this.frame.start % append));
+                    const offset = (i) => i - (this.frame.start + (append - this.frame.start % append) - 1);
                     this.barsX = [];
                     for (let i = -1 * offset(0); i < this.frame.end + 2*append; i = i + append) {
                         let x = this.left + this.padding + Math.floor(offset(i) * this.scaleX) - Math.floor(this.frame.start % append * this.scaleX);

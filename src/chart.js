@@ -136,10 +136,6 @@ export default class Chart {
                 }
             }
             this.config.targetFrame = { start, end };
-            console.log(this.config.targetFrame);
-            console.log(data.columns[0][this.config.targetFrame.start], data.columns[0][this.config.targetFrame.end])
-            console.log(data.columns[1][this.config.targetFrame.start], data.columns[1][this.config.targetFrame.end])
-
         } else {
             this.config.targetFrame = undefined;
         }
